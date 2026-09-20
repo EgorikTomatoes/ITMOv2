@@ -1,22 +1,30 @@
 # Журнал экспериментов Практики 2
 
-- Выбранный слабый артефакт Практики 1:
-- Что в нём нужно улучшить:
-- Как поймём, что изменение полезно:
+- Выбранный слабый артефакт Практики 1: [../practice_01/TRAINING_PR.diff](../practice_01/TRAINING_PR.diff) — секции app/api.py:35–38 и app/review_service.py:19–22
+- Что в нём нужно улучшить: отсутствие проверки поля `diff`, лимита 20 000 символов, таймаута LLM, маскирования секретов, структуры OUT-1 и наблюдаемости. Это противоречит [../practice_01/CASE.md](../practice_01/CASE.md) правилам API-1, SEC-1, REL-1, OUT-1, OBS-1 и инкрементам из [../practice_01/project_management.md](../practice_01/project_management.md).
+- Как поймём, что изменение полезно: интеграционный тест для POST /api/reviews с пустым телом и длинным diff должен возвращать 422/413, а при таймауте LLM — контролируемую ошибку; ответ должен иметь структуру summary/risks/checks, проверяемую по [../practice_01/tests_integration.md](../practice_01/tests_integration.md) и [../practice_01/tests_unit.md](../practice_01/tests_unit.md).
 
 | Техника | Файл эксперимента | Изменённый файл Практики 1 | Конкретное изменение | Проверка | Что отклонили |
 |---|---|---|---|---|---|
-| Few-shot | [`few_shot/experiment.md`](few_shot/experiment.md) |  |  |  |  |
-| R.C.T.F. | [`rctf/experiment.md`](rctf/experiment.md) |  |  |  |  |
-| Chain of Verification | [`chain_of_verification/experiment.md`](chain_of_verification/experiment.md) |  |  |  |  |
-| Tree of Thoughts | [`tree_of_thoughts/experiment.md`](tree_of_thoughts/experiment.md) |  |  |  |  |
-| RAG | [`rag/experiment.md`](rag/experiment.md) |  |  |  |  |
-| ReAct | [`react/experiment.md`](react/experiment.md) |  |  |  |  |
+| Few-shot | [few_shot/experiment.md](few_shot/experiment.md) | [../practice_01/TRAINING_PR.diff](../practice_01/TRAINING_PR.diff) | Зафиксирован негативный аудит PR: отсутствие валидации `diff`, отсутствует длина 20 000, нет SEC-1/REL-1/OUT-1/OBS-1. Проблемы привязаны к конкретным строкам app/api.py:35–38 и app/review_service.py:19–22. | Сопоставление с [../practice_01/project_management.md](../practice_01/project_management.md), [../practice_01/CASE.md](../practice_01/CASE.md), [../practice_01/tests_integration.md](../practice_01/tests_integration.md) и [../practice_01/tests_unit.md](../practice_01/tests_unit.md). | Отклонены любые изменения кода; зафиксированы только проблемные места и их доказательства. |
+| R.C.T.F. | [rctf/experiment.md](rctf/experiment.md) | [../practice_01/TRAINING_PR.diff](../practice_01/TRAINING_PR.diff) | Заполнены Role, Context, Task, Format; добавлен список проблем P1–P14 с привязкой к строкам diff и плану. | Проверка по строкам [../practice_01/TRAINING_PR.diff](../practice_01/TRAINING_PR.diff) app/api.py:35–38, app/review_service.py:19–22 и [../practice_01/project_management.md](../practice_01/project_management.md) строки 7–9, 21, 34. | Не вносили правки в код и диаграмму; фиксировали проблему, не меняя исходный PR. |
+| Chain of Verification | [chain_of_verification/experiment.md](chain_of_verification/experiment.md) | [../practice_01/TRAINING_PR.diff](../practice_01/TRAINING_PR.diff) | Добавлены вопросы проверки, evidence и раздел «Исправленный результат» с подтверждениями/неподтверждениями по API-1, SEC-1, REL-1, OUT-1, OBS-1. | Проверка по [../practice_01/TRAINING_PR.diff](../practice_01/TRAINING_PR.diff), [../practice_01/CASE.md](../practice_01/CASE.md) и [../practice_01/context.md](../practice_01/context.md). | Отклонены домыслы без источников; всё, что не подтверждено, помечено как потенциальная проблема. |
+| Tree of Thoughts | [tree_of_thoughts/experiment.md](tree_of_thoughts/experiment.md) | [../practice_01/TRAINING_PR.diff](../practice_01/TRAINING_PR.diff) | Сформирован анализ по веткам A–F и сводный список проблем: API-1, SEC-1, REL-1, OUT-1, OBS-1, риск Mermaid/Gantt и порядок инкрементов. | Сопоставление с [../practice_01/CASE.md](../practice_01/CASE.md), [../practice_01/project_management.md](../practice_01/project_management.md), [../practice_01/analysis.md](../practice_01/analysis.md). | Не исправляли код, а только зафиксировали независимые ветви и критерии выбора. |
+| RAG | [rag/experiment.md](rag/experiment.md) | [../practice_01/TRAINING_PR.diff](../practice_01/TRAINING_PR.diff) | Проведено сопоставление PR с правилами и планом: указаны доказуемые несоответствия без предположений. | Проверка ссылками на [../practice_01/TRAINING_PR.diff](../practice_01/TRAINING_PR.diff), [../practice_01/CASE.md](../practice_01/CASE.md), [../practice_01/project_management.md](../practice_01/project_management.md), [../practice_01/tests_integration.md](../practice_01/tests_integration.md), [../practice_01/tests_unit.md](../practice_01/tests_unit.md). | Отклонены неподтверждённые претензии (версия Python, аутентификация) как “недостаточно данных”. |
+| ReAct | [react/experiment.md](react/experiment.md) | [../practice_01/TRAINING_PR.diff](../practice_01/TRAINING_PR.diff) | Добавлены входы, ограничения, наблюдаемые действия, шаги, доказанные риски и POTENTIAL-риски; остановка после подтверждённых проблем. | Проверка по [../practice_01/TRAINING_PR.diff](../practice_01/TRAINING_PR.diff), [../practice_01/project_management.md](../practice_01/project_management.md), [../practice_01/CASE.md](../practice_01/CASE.md), [../practice_01/prompts.md](../practice_01/prompts.md). | Отклонены недоказанные гипотезы; исправления ограничены описанием наблюдений и рисков. |
 
 ## Независимое ревью
 
 | Замечание другой команды | Где исправили | Evidence |
 |---|---|---|
-| Двусмысленность |  |  |
-| Непроверяемое требование |  |  |
-| Пропущенный риск или источник |  |  |
+| Двусмысленность | Зафиксировано как открытый вопрос в [rctf/experiment.md](rctf/experiment.md) и [tree_of_thoughts/experiment.md](tree_of_thoughts/experiment.md); в Практике 1 не меняли код, потому что это не подтверждённая проблема, а неопределённость | [../practice_01/context.md](../practice_01/context.md): строка 47 — “целевой Python неизвестен”; [rctf/experiment.md](rctf/experiment.md): P8 |
+| Непроверяемое требование | Обозначено как непроверяемое в [rctf/experiment.md](rctf/experiment.md) и [tree_of_thoughts/experiment.md](tree_of_thoughts/experiment.md); не исправляли план, а пометили как риск формальной проверки | [../practice_01/project_management.md](../practice_01/project_management.md): строка 34 — “корректность Mermaid Gantt”; [../practice_01/project_management.md](../practice_01/project_management.md): строка 21 — `LLM: безопасность и timeout :a3...` |
+| Пропущенный риск или источник | Зафиксирован риск импорта `app.dependencies.review_service` без подтверждения модуля в проекте; возможно, это надо проверить в реальном коде | [../practice_01/TRAINING_PR.diff](../practice_01/TRAINING_PR.diff): app/api.py:30–31; [rctf/experiment.md](rctf/experiment.md): P7; [tree_of_thoughts/experiment.md](tree_of_thoughts/experiment.md): ветка B/Финальный отбор |
+
+## Дополнение к критериям оценки
+
+- Основной слабый артефакт: [../practice_01/TRAINING_PR.diff](../practice_01/TRAINING_PR.diff)
+- Ключевые нестыковки: отсутствие 422/413, отсутствие SEC-1, REL-1, OUT-1, OBS-1, отсутствие проверок по [../practice_01/tests_integration.md](../practice_01/tests_integration.md) и [../practice_01/tests_unit.md](../practice_01/tests_unit.md)
+- Проверка качества: все выводы привязаны к источникам, а не к общим рассуждениям
+
+
