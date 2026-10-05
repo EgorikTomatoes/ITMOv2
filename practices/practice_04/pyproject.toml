@@ -1,0 +1,22 @@
+[project]
+name = "variable-translator"
+version = "1.0.0"
+description = "Translate Russian phrases into English code variable names using Ollama"
+requires-python = ">=3.9"
+
+[project.optional-dependencies]
+dev = ["ruff==0.14.2"]
+
+[project.scripts]
+variable-translator = "variable_translator.cli:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.ruff]
+target-version = "py39"
+line-length = 88
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]

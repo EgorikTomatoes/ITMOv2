@@ -1,0 +1,73 @@
+{
+  "name": "russian-variable-translator",
+  "displayName": "Russian Variable Translator",
+  "description": "Translates Russian text to English variable names with local Ollama.",
+  "version": "0.1.0",
+  "publisher": "itmo",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onCommand:variableTranslator.translateAtCursor"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "variableTranslator.translateAtCursor",
+        "title": "Перевести текст в имя переменной"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "variableTranslator.translateAtCursor",
+        "key": "ctrl+alt+t",
+        "mac": "cmd+alt+t",
+        "when": "editorTextFocus"
+      }
+    ],
+    "configuration": {
+      "title": "Russian Variable Translator",
+      "properties": {
+        "russianVariableTranslator.ollamaUrl": {
+          "type": "string",
+          "default": "http://localhost:11434",
+          "description": "Адрес локального Ollama API."
+        },
+        "russianVariableTranslator.model": {
+          "type": "string",
+          "default": "variable-translator",
+          "description": "Имя модели Ollama для перевода."
+        },
+        "russianVariableTranslator.style": {
+          "type": "string",
+          "enum": [
+            "snake",
+            "camel",
+            "pascal",
+            "constant"
+          ],
+          "default": "snake",
+          "description": "Стиль создаваемого имени переменной."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p tsconfig.json",
+    "lint": "eslint src test --max-warnings=0",
+    "test": "tsc -p tsconfig.test.json && node --test .test-out/test/*.test.js",
+    "check": "npm run lint && npm test && npm run compile"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^22.0.0",
+    "@types/vscode": "^1.85.0",
+    "eslint": "^10.12.0",
+    "typescript": "^5.7.0",
+    "typescript-eslint": "^8.71.0"
+  }
+}

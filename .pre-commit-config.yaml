@@ -1,0 +1,10 @@
+repos:
+  - repo: local
+    hooks:
+      - id: practice-04-check
+        name: Practice 04 automatic checks
+        entry: bash practices/practice_04/scripts/pre-commit-check.sh
+        language: python
+        additional_dependencies: [ruff==0.14.2]
+        pass_filenames: false
+        files: ^practices/practice_04/
