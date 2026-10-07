@@ -1,0 +1,16 @@
+$ make mcp-demo
+INITIALIZE
+serverInfo: {"name": "identifier-inspector", "version": "1.0.0"}
+protocolVersion: "2025-06-18"
+
+SUCCESSFUL TOOL CALL
+candidate: "number_of_active_users"
+normalized: "number_of_active_users"
+style: "snake"
+valid: true
+isError: false
+
+INVALID INPUT TOOL CALL
+text: "candidate must contain ASCII English letters, digits, or underscores"
+isError: true
+[exit code] 0

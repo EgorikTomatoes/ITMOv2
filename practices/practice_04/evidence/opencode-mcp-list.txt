@@ -1,0 +1,8 @@
+$ opencode mcp list
+
+MCP Servers
+✓ identifier-inspector connected
+  python3 -m mcp_server.server
+
+1 server(s)
+[exit code] 0

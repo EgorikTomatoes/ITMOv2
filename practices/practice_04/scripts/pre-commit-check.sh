@@ -2,10 +2,13 @@
 
 set -u
 
-echo "[event] git pre-commit"
-echo "[command] make -C practices/practice_04 check"
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+project_dir="$(cd "${script_dir}/.." && pwd)"
 
-if make -C practices/practice_04 check; then
+echo "[event] git pre-commit"
+echo "[command] make -C ${project_dir} check"
+
+if make -C "${project_dir}" check; then
   echo "[exit code] 0"
   echo "[result] automatic checks passed"
 else

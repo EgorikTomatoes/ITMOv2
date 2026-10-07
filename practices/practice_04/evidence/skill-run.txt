@@ -1,0 +1,12 @@
+$ python3 -m unittest \
+    tests.test_mcp_server.MCPServerTests.test_inspect_identifier_accepts_matching_snake_case \
+    -v
+test_inspect_identifier_accepts_matching_snake_case \
+    (tests.test_mcp_server.MCPServerTests) ... ok
+
+Ran 1 test in 0.000s
+OK
+[exit code] 0
+
+Проверен выбранный публичный seam JSON-RPC `tools/call`. Тест обращается к
+`dispatch` и проверяет наблюдаемый MCP-ответ, не внутреннюю реализацию.

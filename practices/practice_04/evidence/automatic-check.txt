@@ -1,0 +1,18 @@
+$ make check
+python3 -m ruff check variable_translator mcp_server tests
+All checks passed!
+python3 -m ruff format --check variable_translator mcp_server tests
+9 files already formatted
+
+Python unittest: 9 tests passed.
+ESLint: passed with zero warnings.
+Node test runner: 3 tests passed.
+TypeScript compiler: passed.
+
+[exit code] 0
+
+$ /Library/Developer/CommandLineTools/usr/bin/python3 -m pre_commit run \
+    --files practices/practice_04/mcp_server/server.py \
+    practices/practice_04/tests/test_mcp_server.py
+Practice 04 automatic checks.............................................Passed
+[exit code] 0

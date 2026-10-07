@@ -1,0 +1,8 @@
+$ python3 -m unittest tests.test_mcp_server -v
+test_mcp_server (unittest.loader._FailedTest) ... ERROR
+
+ImportError: Failed to import test module: test_mcp_server
+ModuleNotFoundError: No module named 'mcp_server'
+
+FAILED (errors=1)
+[exit code] 1
