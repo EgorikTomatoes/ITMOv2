@@ -57,6 +57,7 @@
     }
   },
   "scripts": {
+    "ollama:setup": "ollama create variable-translator -f Modelfile",
     "compile": "tsc -p tsconfig.json",
     "lint": "eslint src test --max-warnings=0",
     "test": "tsc -p tsconfig.test.json && node --test .test-out/test/*.test.js",

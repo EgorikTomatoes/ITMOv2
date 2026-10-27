@@ -63,6 +63,46 @@ test("translator requests Ollama and returns a snake case variable name", async 
   assert.equal(requestedUrl, "http://localhost:11434/api/generate");
   assert.match(requestedBody, /количество активных пользователей/);
   assert.equal(JSON.parse(requestedBody).think, false);
+  assert.equal(JSON.parse(requestedBody).options.temperature, 0);
+  assert.match(JSON.parse(requestedBody).system, /translate Russian text/i);
+});
+
+test("translator explains how to start Ollama when the connection fails", async () => {
+  const translate = createOllamaTranslator(
+    async () => {
+      throw new TypeError("fetch failed");
+    },
+    { baseUrl: "http://localhost:11434", model: "variable-translator", style: "snake" }
+  );
+
+  await assert.rejects(
+    () => translate("количество пользователей"),
+    /Запустите `ollama serve`/
+  );
+});
+
+test("translator explains how to create a missing model", async () => {
+  const translate = createOllamaTranslator(
+    async () => new Response(JSON.stringify({ error: "model not found" }), { status: 404 }),
+    { baseUrl: "http://localhost:11434", model: "variable-translator", style: "snake" }
+  );
+
+  await assert.rejects(
+    () => translate("количество пользователей"),
+    /npm run ollama:setup/
+  );
+});
+
+test("translator rejects a service message instead of inserting patch_failed", async () => {
+  const translate = createOllamaTranslator(
+    async () => new Response(JSON.stringify({ response: "patch failed" }), { status: 200 }),
+    { baseUrl: "http://localhost:11434", model: "variable-translator", style: "snake" }
+  );
+
+  await assert.rejects(
+    () => translate("количество пользователей"),
+    /служебное сообщение/
+  );
 });
 
 test("formatting returns camelCase and PascalCase and UPPER_SNAKE_CASE", async () => {

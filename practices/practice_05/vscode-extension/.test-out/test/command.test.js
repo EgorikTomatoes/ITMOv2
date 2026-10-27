@@ -55,6 +55,22 @@ const ollama_1 = require("../src/ollama");
     strict_1.default.equal(requestedUrl, "http://localhost:11434/api/generate");
     strict_1.default.match(requestedBody, /количество активных пользователей/);
     strict_1.default.equal(JSON.parse(requestedBody).think, false);
+    strict_1.default.equal(JSON.parse(requestedBody).options.temperature, 0);
+    strict_1.default.match(JSON.parse(requestedBody).system, /translate Russian text/i);
+});
+(0, node_test_1.default)("translator explains how to start Ollama when the connection fails", async () => {
+    const translate = (0, ollama_1.createOllamaTranslator)(async () => {
+        throw new TypeError("fetch failed");
+    }, { baseUrl: "http://localhost:11434", model: "variable-translator", style: "snake" });
+    await strict_1.default.rejects(() => translate("количество пользователей"), /Запустите `ollama serve`/);
+});
+(0, node_test_1.default)("translator explains how to create a missing model", async () => {
+    const translate = (0, ollama_1.createOllamaTranslator)(async () => new Response(JSON.stringify({ error: "model not found" }), { status: 404 }), { baseUrl: "http://localhost:11434", model: "variable-translator", style: "snake" });
+    await strict_1.default.rejects(() => translate("количество пользователей"), /npm run ollama:setup/);
+});
+(0, node_test_1.default)("translator rejects a service message instead of inserting patch_failed", async () => {
+    const translate = (0, ollama_1.createOllamaTranslator)(async () => new Response(JSON.stringify({ response: "patch failed" }), { status: 200 }), { baseUrl: "http://localhost:11434", model: "variable-translator", style: "snake" });
+    await strict_1.default.rejects(() => translate("количество пользователей"), /служебное сообщение/);
 });
 (0, node_test_1.default)("formatting returns camelCase and PascalCase and UPPER_SNAKE_CASE", async () => {
     const mockFetch = async () => new Response(JSON.stringify({ response: "number of active users" }), { status: 200 });

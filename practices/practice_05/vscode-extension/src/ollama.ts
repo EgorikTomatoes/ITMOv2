@@ -18,6 +18,14 @@ export type FetchLike = (
 ) => Promise<Response>;
 
 function formatIdentifier(value: string, style: VariableStyle): string {
+  const normalizedResponse = value.trim().toLowerCase().replace(/[_-]+/g, " ");
+  if (/^(patch|fetch|tool|operation|request) (failed|failure|error)$/.test(normalizedResponse)) {
+    throw new Error(
+      "Ollama вернула служебное сообщение вместо перевода. " +
+      "Пересоздайте модель командой `npm run ollama:setup`."
+    );
+  }
+
   const words = value
     .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
     .match(/[A-Za-z0-9]+/g)
@@ -54,22 +62,38 @@ export function createOllamaTranslator(
   settings: OllamaSettings
 ): Translator {
   return async (text: string): Promise<string> => {
-    const response = await fetcher(`${settings.baseUrl.replace(/\/$/, "")}/api/generate`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: settings.model,
-        stream: false,
-        think: false,
-        prompt:
-          "Translate the Russian text into a concise English code variable name. " +
-          "Return only lowercase English words separated by spaces, without explanation. " +
-          `Russian text: ${text}`
-      })
-    });
+    let response: Response;
+    try {
+      response = await fetcher(`${settings.baseUrl.replace(/\/$/, "")}/api/generate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: settings.model,
+          stream: false,
+          think: false,
+          options: {
+            temperature: 0,
+            num_predict: 32
+          },
+          system:
+            "You translate Russian text into concise English variable names. " +
+            "Reply only with lowercase English words separated by single spaces. " +
+            "Do not explain the answer and do not use punctuation, markdown, or tool calls.",
+          prompt: `Russian text: ${text}`
+        })
+      });
+    } catch {
+      throw new Error(
+        "Не удалось подключиться к Ollama. Запустите `ollama serve` и повторите команду."
+      );
+    }
 
     if (!response.ok) {
-      throw new Error(`Ollama вернула HTTP ${response.status}.`);
+      const details = await readErrorDetails(response);
+      const setupHint = response.status === 404
+        ? " Создайте модель командой `npm run ollama:setup`."
+        : "";
+      throw new Error(`Ollama вернула HTTP ${response.status}${details}.${setupHint}`);
     }
 
     const data: unknown = await response.json();
@@ -78,6 +102,23 @@ export function createOllamaTranslator(
     }
     return formatIdentifier(data.response, settings.style);
   };
+}
+
+async function readErrorDetails(response: Response): Promise<string> {
+  try {
+    const body: unknown = await response.json();
+    if (
+      typeof body === "object" &&
+      body !== null &&
+      "error" in body &&
+      typeof body.error === "string"
+    ) {
+      return `: ${body.error}`;
+    }
+  } catch {
+    // Some Ollama/proxy errors have an empty or non-JSON body.
+  }
+  return "";
 }
 
 function isGenerateResponse(value: unknown): value is { response: string } {
