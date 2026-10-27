@@ -47,8 +47,27 @@ function activate(context) {
             void vscode.window.showErrorMessage("Откройте файл в редакторе, чтобы вставить имя переменной.");
             return;
         }
+        // Прежде чем запрашивать текст, спросим стиль форматирования
+        const settings = readSettings();
+        const styleOptions = [
+            { label: "snake", description: "snake_case", value: "snake", picked: settings.style === "snake" },
+            { label: "camel", description: "camelCase", value: "camel", picked: settings.style === "camel" },
+            { label: "pascal", description: "PascalCase", value: "pascal", picked: settings.style === "pascal" },
+            { label: "constant", description: "UPPER_SNAKE_CASE", value: "constant", picked: settings.style === "constant" }
+        ];
+        const picked = await vscode.window.showQuickPick(styleOptions, {
+            title: "Стиль переменной",
+            placeHolder: "Выберите стиль форматирования имени переменной",
+            ignoreFocusOut: true,
+            canPickMany: false
+        });
+        // Отмена выбора стиля отменяет всю команду
+        if (!picked) {
+            return;
+        }
+        const chosenStyle = picked.value;
         const editorApi = createEditorApi(editor);
-        const translator = (0, ollama_1.createOllamaTranslator)(globalThis.fetch, readSettings());
+        const translator = (0, ollama_1.createOllamaTranslator)(globalThis.fetch, { ...settings, style: chosenStyle });
         await (0, command_1.runTranslationCommand)(editorApi, translator);
     });
     context.subscriptions.push(disposable);

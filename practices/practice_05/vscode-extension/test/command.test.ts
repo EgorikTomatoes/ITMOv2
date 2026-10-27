@@ -64,3 +64,28 @@ test("translator requests Ollama and returns a snake case variable name", async 
   assert.match(requestedBody, /количество активных пользователей/);
   assert.equal(JSON.parse(requestedBody).think, false);
 });
+
+test("formatting returns camelCase and PascalCase and UPPER_SNAKE_CASE", async () => {
+  const mockFetch: (url: string, init?: { method?: string; headers?: Record<string, string>; body?: string }) => Promise<Response> =
+    async () => new Response(JSON.stringify({ response: "number of active users" }), { status: 200 });
+
+  const translateCamel = createOllamaTranslator(mockFetch, {
+    baseUrl: "http://localhost:11434",
+    model: "variable-translator",
+    style: "camel"
+  });
+  const translatePascal = createOllamaTranslator(mockFetch, {
+    baseUrl: "http://localhost:11434",
+    model: "variable-translator",
+    style: "pascal"
+  });
+  const translateConstant = createOllamaTranslator(mockFetch, {
+    baseUrl: "http://localhost:11434",
+    model: "variable-translator",
+    style: "constant"
+  });
+
+  assert.equal(await translateCamel("текст"), "numberOfActiveUsers");
+  assert.equal(await translatePascal("текст"), "NumberOfActiveUsers");
+  assert.equal(await translateConstant("текст"), "NUMBER_OF_ACTIVE_USERS");
+});
