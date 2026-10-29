@@ -2,7 +2,7 @@
   "name": "russian-variable-translator",
   "displayName": "Russian Variable Translator",
   "description": "Translates Russian text to English variable names with local Ollama.",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "publisher": "itmo",
   "engines": {
     "vscode": "^1.85.0"
@@ -57,11 +57,13 @@
     }
   },
   "scripts": {
+    "vscode:prepublish": "npm run compile",
     "ollama:setup": "ollama create variable-translator -f Modelfile",
     "compile": "tsc -p tsconfig.json",
     "lint": "eslint src test --max-warnings=0",
-    "test": "tsc -p tsconfig.test.json && node --test .test-out/test/*.test.js",
-    "check": "npm run lint && npm test && npm run compile"
+    "test": "node -e \"require('node:fs').rmSync('.test-out',{recursive:true,force:true})\" && tsc -p tsconfig.test.json && node --test '.test-out/test/**/*.test.js'",
+    "check": "npm run lint && npm test && npm run compile",
+    "package:vsix": "npx --yes @vscode/vsce@4.0.0 package --out russian-variable-translator-0.2.0.vsix"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

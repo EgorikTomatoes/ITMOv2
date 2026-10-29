@@ -46,7 +46,7 @@ const ollama_1 = require("../src/ollama");
     const translate = (0, ollama_1.createOllamaTranslator)(async (url, init) => {
         requestedUrl = String(url);
         requestedBody = String(init?.body);
-        return new Response(JSON.stringify({ response: "number of active users" }), {
+        return new Response(JSON.stringify({ response: "{\"words\":[\"number\",\"of\",\"active\",\"users\"]}" }), {
             status: 200
         });
     }, { baseUrl: "http://localhost:11434", model: "variable-translator", style: "snake" });
@@ -55,6 +55,7 @@ const ollama_1 = require("../src/ollama");
     strict_1.default.equal(requestedUrl, "http://localhost:11434/api/generate");
     strict_1.default.match(requestedBody, /количество активных пользователей/);
     strict_1.default.equal(JSON.parse(requestedBody).think, false);
+    strict_1.default.deepEqual(JSON.parse(requestedBody).format.required, ["words"]);
     strict_1.default.equal(JSON.parse(requestedBody).options.temperature, 0);
     strict_1.default.match(JSON.parse(requestedBody).system, /translate Russian text/i);
 });
@@ -73,7 +74,7 @@ const ollama_1 = require("../src/ollama");
     await strict_1.default.rejects(() => translate("количество пользователей"), /служебное сообщение/);
 });
 (0, node_test_1.default)("formatting returns camelCase and PascalCase and UPPER_SNAKE_CASE", async () => {
-    const mockFetch = async () => new Response(JSON.stringify({ response: "number of active users" }), { status: 200 });
+    const mockFetch = async () => new Response(JSON.stringify({ response: "{\"words\":[\"number\",\"of\",\"active\",\"users\"]}" }), { status: 200 });
     const translateCamel = (0, ollama_1.createOllamaTranslator)(mockFetch, {
         baseUrl: "http://localhost:11434",
         model: "variable-translator",

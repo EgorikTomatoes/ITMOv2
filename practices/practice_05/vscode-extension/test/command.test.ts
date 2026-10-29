@@ -50,7 +50,7 @@ test("translator requests Ollama and returns a snake case variable name", async 
     async (url, init) => {
       requestedUrl = String(url);
       requestedBody = String(init?.body);
-      return new Response(JSON.stringify({ response: "number of active users" }), {
+      return new Response(JSON.stringify({ response: "{\"words\":[\"number\",\"of\",\"active\",\"users\"]}" }), {
         status: 200
       });
     },
@@ -63,6 +63,7 @@ test("translator requests Ollama and returns a snake case variable name", async 
   assert.equal(requestedUrl, "http://localhost:11434/api/generate");
   assert.match(requestedBody, /количество активных пользователей/);
   assert.equal(JSON.parse(requestedBody).think, false);
+  assert.deepEqual(JSON.parse(requestedBody).format.required, ["words"]);
   assert.equal(JSON.parse(requestedBody).options.temperature, 0);
   assert.match(JSON.parse(requestedBody).system, /translate Russian text/i);
 });
@@ -107,7 +108,7 @@ test("translator rejects a service message instead of inserting patch_failed", a
 
 test("formatting returns camelCase and PascalCase and UPPER_SNAKE_CASE", async () => {
   const mockFetch: (url: string, init?: { method?: string; headers?: Record<string, string>; body?: string }) => Promise<Response> =
-    async () => new Response(JSON.stringify({ response: "number of active users" }), { status: 200 });
+    async () => new Response(JSON.stringify({ response: "{\"words\":[\"number\",\"of\",\"active\",\"users\"]}" }), { status: 200 });
 
   const translateCamel = createOllamaTranslator(mockFetch, {
     baseUrl: "http://localhost:11434",

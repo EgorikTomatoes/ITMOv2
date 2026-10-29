@@ -1,7 +1,9 @@
 .vscode/**
-.gitignore
+.test-out/**
 src/**
 test/**
-tsconfig*.json
 node_modules/**
-.test-out/**
+*.vsix
+eslint.config.mjs
+tsconfig.json
+tsconfig.test.json

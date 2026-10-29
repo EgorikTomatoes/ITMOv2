@@ -6,6 +6,9 @@ import {
   type OllamaSettings,
   type VariableStyle
 } from "./ollama";
+import { ensureOllamaRunning, type PreflightAction, type PreflightUi } from "./preflight/orchestrator";
+import type { ErrorCode } from "./preflight/types";
+import { createNodeProcessRunner } from "./process/ollamaRunner";
 
 const COMMAND_ID = "variableTranslator.translateAtCursor";
 const CONFIGURATION_SECTION = "russianVariableTranslator";
@@ -18,8 +21,18 @@ export function activate(context: vscode.ExtensionContext): void {
       return;
     }
 
-    // Прежде чем запрашивать текст, спросим стиль форматирования
+    // Прежде чем запрашивать текст, выполним префлайт-проверку
     const settings = readSettings();
+    const ok = await ensureOllamaRunning({
+      fetcher: globalThis.fetch,
+      baseUrl: settings.baseUrl,
+      runner: createNodeProcessRunner(),
+      isMacOS: process.platform === "darwin",
+      ui: createPreflightUi()
+    });
+    if (!ok) {
+      return;
+    }
     const styleOptions: Array<vscode.QuickPickItem & { value: VariableStyle }> = [
       { label: "snake", description: "snake_case", value: "snake", picked: settings.style === "snake" },
       { label: "camel", description: "camelCase", value: "camel", picked: settings.style === "camel" },
@@ -80,4 +93,71 @@ function createEditorApi(editor: vscode.TextEditor): EditorApi {
       void vscode.window.showErrorMessage(message);
     }
   };
+}
+
+function createPreflightUi(): PreflightUi {
+  return {
+    runCheck: (task) => withCancellableProgress("Проверка Ollama…", task),
+    runStart: (task) => withCancellableProgress("Ollama запускается…", task),
+    async chooseAction(status): Promise<PreflightAction> {
+      const actions: Array<vscode.QuickPickItem & { value: PreflightAction }> = [];
+      if (
+        status.canStartLocal &&
+        (status.state === "stopped" || status.errorCode === "network-error")
+      ) {
+        actions.push({ label: "$(play) Запустить Ollama", value: "start" });
+      }
+      actions.push({ label: "$(refresh) Повторить проверку", value: "retry" });
+      actions.push({ label: "$(close) Отмена", value: "cancel" });
+
+      const choice = await vscode.window.showQuickPick(actions, {
+        title: "Ollama недоступна",
+        placeHolder: status.state === "stopped"
+          ? "Ollama не запущена"
+          : mapErrorMessage(status.errorCode),
+        canPickMany: false,
+        ignoreFocusOut: true
+      });
+      return choice?.value ?? "cancel";
+    },
+    showRunning(): void {
+      void vscode.window.showInformationMessage("Ollama запущена и готова к работе.");
+    },
+    showError(errorCode): void {
+      void vscode.window.showErrorMessage(mapErrorMessage(errorCode));
+    }
+  };
+}
+
+async function withCancellableProgress<T>(
+  title: string,
+  task: (signal: AbortSignal) => Promise<T>
+): Promise<T> {
+  return await vscode.window.withProgress({
+    location: vscode.ProgressLocation.Notification,
+    title,
+    cancellable: true
+  }, async (_progress, token) => {
+    const controller = new AbortController();
+    const subscription = token.onCancellationRequested(() => controller.abort());
+    try {
+      return await task(controller.signal);
+    } finally {
+      subscription.dispose();
+    }
+  });
+}
+
+function mapErrorMessage(code?: ErrorCode): string {
+  switch (code) {
+    case "health-timeout": return "Проверка Ollama заняла слишком долго";
+    case "http-error": return "Ollama недоступна";
+    case "network-error": return "Не удалось подключиться к Ollama";
+    case "start-timeout": return "Ollama не запустилась вовремя";
+    case "start-failed": return "Не удалось запустить Ollama";
+    case "port-busy": return "Порт Ollama занят";
+    case "ollama-not-found": return "Команда ‘ollama’ не найдена";
+    case "unsupported-platform": return "Автозапуск Ollama недоступен на этой платформе";
+    default: return "Ollama недоступна";
+  }
 }

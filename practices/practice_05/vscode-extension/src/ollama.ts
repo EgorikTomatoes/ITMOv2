@@ -26,7 +26,7 @@ function formatIdentifier(value: string, style: VariableStyle): string {
     );
   }
 
-  const words = value
+  const words = extractWords(value)
     .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
     .match(/[A-Za-z0-9]+/g)
     ?.map((word) => word.toLowerCase());
@@ -53,6 +53,24 @@ function formatIdentifier(value: string, style: VariableStyle): string {
   return /^\d/.test(result) ? `value_${result}` : result;
 }
 
+function extractWords(value: string): string {
+  try {
+    const parsed: unknown = JSON.parse(value);
+    if (
+      typeof parsed === "object" &&
+      parsed !== null &&
+      "words" in parsed &&
+      Array.isArray(parsed.words) &&
+      parsed.words.every((word) => typeof word === "string")
+    ) {
+      return parsed.words.join(" ");
+    }
+  } catch {
+    // Backward compatibility with older models that return plain text.
+  }
+  return value;
+}
+
 function capitalize(value: string): string {
   return value.charAt(0).toUpperCase() + value.slice(1);
 }
@@ -71,14 +89,26 @@ export function createOllamaTranslator(
           model: settings.model,
           stream: false,
           think: false,
+          format: {
+            type: "object",
+            properties: {
+              words: {
+                type: "array",
+                items: { type: "string", pattern: "^[a-z0-9]+$" },
+                minItems: 1
+              }
+            },
+            required: ["words"]
+          },
           options: {
             temperature: 0,
             num_predict: 32
           },
           system:
             "You translate Russian text into concise English variable names. " +
-            "Reply only with lowercase English words separated by single spaces. " +
-            "Do not explain the answer and do not use punctuation, markdown, or tool calls.",
+            "Return a JSON object with a words array containing separate lowercase English words. " +
+            "Example: {\"words\":[\"active\",\"user\",\"count\"]}. " +
+            "Do not explain the answer.",
           prompt: `Russian text: ${text}`
         })
       });

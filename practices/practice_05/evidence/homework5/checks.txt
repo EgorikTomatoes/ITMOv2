@@ -1,0 +1,132 @@
+> russian-variable-translator@0.2.0 check
+> npm run lint && npm test && npm run compile
+
+
+> russian-variable-translator@0.2.0 lint
+> eslint src test --max-warnings=0
+
+
+> russian-variable-translator@0.2.0 test
+> node -e "require('node:fs').rmSync('.test-out',{recursive:true,force:true})" && tsc -p tsconfig.test.json && node --test '.test-out/test/**/*.test.js'
+
+TAP version 13
+# Subtest: command inserts the translated variable at the cursor
+ok 1 - command inserts the translated variable at the cursor
+  ---
+  duration_ms: 1.236625
+  type: 'test'
+  ...
+# Subtest: command does not edit the document when input is cancelled
+ok 2 - command does not edit the document when input is cancelled
+  ---
+  duration_ms: 0.114791
+  type: 'test'
+  ...
+# Subtest: translator requests Ollama and returns a snake case variable name
+ok 3 - translator requests Ollama and returns a snake case variable name
+  ---
+  duration_ms: 12.711208
+  type: 'test'
+  ...
+# Subtest: translator explains how to start Ollama when the connection fails
+ok 4 - translator explains how to start Ollama when the connection fails
+  ---
+  duration_ms: 0.223208
+  type: 'test'
+  ...
+# Subtest: translator explains how to create a missing model
+ok 5 - translator explains how to create a missing model
+  ---
+  duration_ms: 0.224917
+  type: 'test'
+  ...
+# Subtest: translator rejects a service message instead of inserting patch_failed
+ok 6 - translator rejects a service message instead of inserting patch_failed
+  ---
+  duration_ms: 0.234792
+  type: 'test'
+  ...
+# Subtest: formatting returns camelCase and PascalCase and UPPER_SNAKE_CASE
+ok 7 - formatting returns camelCase and PascalCase and UPPER_SNAKE_CASE
+  ---
+  duration_ms: 0.360917
+  type: 'test'
+  ...
+# Subtest: checkOllamaStatus returns running only for an Ollama version response
+ok 8 - checkOllamaStatus returns running only for an Ollama version response
+  ---
+  duration_ms: 13.7865
+  type: 'test'
+  ...
+# Subtest: checkOllamaStatus classifies a refused local connection as stopped
+ok 9 - checkOllamaStatus classifies a refused local connection as stopped
+  ---
+  duration_ms: 0.129875
+  type: 'test'
+  ...
+# Subtest: checkOllamaStatus reads ECONNREFUSED from the cause of Node fetch failed
+ok 10 - checkOllamaStatus reads ECONNREFUSED from the cause of Node fetch failed
+  ---
+  duration_ms: 0.083958
+  type: 'test'
+  ...
+# Subtest: checkOllamaStatus aborts a hanging request at the configured timeout
+ok 11 - checkOllamaStatus aborts a hanging request at the configured timeout
+  ---
+  duration_ms: 5.909875
+  type: 'test'
+  ...
+# Subtest: startOllama uses the resolved executable and fixed serve argument
+ok 12 - startOllama uses the resolved executable and fixed serve argument
+  ---
+  duration_ms: 0.477333
+  type: 'test'
+  ...
+# Subtest: startOllama reports missing executable and spawn errors
+ok 13 - startOllama reports missing executable and spawn errors
+  ---
+  duration_ms: 0.095708
+  type: 'test'
+  ...
+# Subtest: waitUntilOllamaReady retries until the Ollama API becomes available
+ok 14 - waitUntilOllamaReady retries until the Ollama API becomes available
+  ---
+  duration_ms: 1.920625
+  type: 'test'
+  ...
+# Subtest: waitUntilOllamaReady returns start-timeout after bounded attempts
+ok 15 - waitUntilOllamaReady returns start-timeout after bounded attempts
+  ---
+  duration_ms: 1.583417
+  type: 'test'
+  ...
+# Subtest: orchestrator stops before translation flow when the user cancels
+ok 16 - orchestrator stops before translation flow when the user cancels
+  ---
+  duration_ms: 0.4305
+  type: 'test'
+  ...
+# Subtest: orchestrator starts Ollama, waits for readiness, then continues
+ok 17 - orchestrator starts Ollama, waits for readiness, then continues
+  ---
+  duration_ms: 0.481209
+  type: 'test'
+  ...
+# Subtest: orchestrator stops only the process it started when readiness times out
+ok 18 - orchestrator stops only the process it started when readiness times out
+  ---
+  duration_ms: 0.144167
+  type: 'test'
+  ...
+1..18
+# tests 18
+# suites 0
+# pass 18
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 61.724166
+
+> russian-variable-translator@0.2.0 compile
+> tsc -p tsconfig.json
