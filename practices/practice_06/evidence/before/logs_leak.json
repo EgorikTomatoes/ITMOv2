@@ -1,0 +1,103 @@
+{
+  "request": {
+    "method": "GET",
+    "path": "/debug/logs",
+    "body": {},
+    "headers": {}
+  },
+  "response": {
+    "status": 200,
+    "result": [
+      {
+        "method": "POST",
+        "target": "/login",
+        "body": {
+          "username": "alice",
+          "password": "learn-alice"
+        },
+        "headers": {}
+      },
+      {
+        "method": "POST",
+        "target": "/login",
+        "body": {
+          "username": "bob",
+          "password": "learn-bob"
+        },
+        "headers": {}
+      },
+      {
+        "method": "POST",
+        "target": "/login",
+        "body": {
+          "username": "staff",
+          "password": "learn-staff"
+        },
+        "headers": {}
+      },
+      {
+        "method": "GET",
+        "target": "/profile?id=2",
+        "body": {},
+        "headers": {
+          "X-Token": "ee2f22eea7c7452b8eb546ab2f127bbe"
+        }
+      },
+      {
+        "method": "GET",
+        "target": "/profile?id=1 OR 1=1",
+        "body": {},
+        "headers": {
+          "X-Token": "ee2f22eea7c7452b8eb546ab2f127bbe"
+        }
+      },
+      {
+        "method": "GET",
+        "target": "/orders",
+        "body": {},
+        "headers": {}
+      },
+      {
+        "method": "POST",
+        "target": "/orders",
+        "body": {
+          "product": "lamp",
+          "price": 1
+        },
+        "headers": {
+          "X-Token": "ee2f22eea7c7452b8eb546ab2f127bbe"
+        }
+      },
+      {
+        "method": "GET",
+        "target": "/admin/export",
+        "body": {},
+        "headers": {
+          "X-Role": "staff"
+        }
+      },
+      {
+        "method": "GET",
+        "target": "/files?user=bob&path=receipt.txt",
+        "body": {},
+        "headers": {
+          "X-Token": "ee2f22eea7c7452b8eb546ab2f127bbe"
+        }
+      },
+      {
+        "method": "GET",
+        "target": "/files?user=..&path=private/operator-note.txt",
+        "body": {},
+        "headers": {
+          "X-Token": "ee2f22eea7c7452b8eb546ab2f127bbe"
+        }
+      },
+      {
+        "method": "GET",
+        "target": "/debug/logs",
+        "body": {},
+        "headers": {}
+      }
+    ]
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "request": {
+    "method": "GET",
+    "path": "/profile?id=2",
+    "body": {},
+    "headers": {
+      "X-Token": "ee2f22eea7c7452b8eb546ab2f127bbe"
+    }
+  },
+  "response": {
+    "status": 200,
+    "result": [
+      {
+        "id": 2,
+        "name": "TEST_BOB",
+        "email": "bob@example.invalid",
+        "address": "TEST_ADDRESS_B"
+      }
+    ]
+  }
+}

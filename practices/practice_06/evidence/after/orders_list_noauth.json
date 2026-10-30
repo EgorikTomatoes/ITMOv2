@@ -1,0 +1,14 @@
+{
+  "request": {
+    "method": "GET",
+    "path": "/orders",
+    "body": {},
+    "headers": {}
+  },
+  "response": {
+    "status": 401,
+    "result": {
+      "error": "login required"
+    }
+  }
+}

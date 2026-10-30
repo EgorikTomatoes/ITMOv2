@@ -1,0 +1,14 @@
+{
+  "request": {
+    "method": "GET",
+    "path": "/debug/logs",
+    "body": {},
+    "headers": {}
+  },
+  "response": {
+    "status": 403,
+    "result": {
+      "error": "staff only"
+    }
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "request": {
+    "method": "GET",
+    "path": "/files?user=bob&path=receipt.txt",
+    "body": {},
+    "headers": {
+      "X-Token": "ee2f22eea7c7452b8eb546ab2f127bbe"
+    }
+  },
+  "response": {
+    "status": 200,
+    "result": {
+      "content": "TEST_BOB receipt: lamp, 1500 RUB"
+    }
+  }
+}

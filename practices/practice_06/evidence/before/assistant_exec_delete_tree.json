@@ -1,0 +1,23 @@
+{
+  "request": {
+    "method": "POST",
+    "path": "/assistant/execute",
+    "body": {
+      "decision": {
+        "tool": "delete_tree",
+        "arguments": {
+          "path": "."
+        }
+      }
+    },
+    "headers": {
+      "X-Token": "ee2f22eea7c7452b8eb546ab2f127bbe"
+    }
+  },
+  "response": {
+    "status": 200,
+    "result": {
+      "deleted": "."
+    }
+  }
+}

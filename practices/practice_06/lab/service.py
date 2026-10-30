@@ -51,14 +51,38 @@ class Shop:
             if not account or body.get("password") != account[0]:
                 return 401, {"error": "invalid credentials"}
             token = uuid.uuid4().hex
-            self.sessions[token] = {"id": account[1], "role": account[2]}
+            # Store username for file ownership checks; never trust client role headers
+            self.sessions[token] = {"id": account[1], "role": account[2], "user": body.get("username")}
             return 200, {"token": token}
         if method == "GET" and url.path == "/profile":
-            return 200, self.rows(f"SELECT * FROM profiles WHERE id = {query.get('id', '1')}")
+            # Require session and return own profile; staff may request arbitrary id
+            session = self.sessions.get(headers.get("X-Token"))
+            if not session:
+                return 401, {"error": "login required"}
+            try:
+                requested = int(query.get("id", session["id"]))
+            except Exception:
+                return 400, {"error": "invalid id"}
+            target_id = requested if session["role"] == "staff" else session["id"]
+            cursor = self.db.execute("SELECT * FROM profiles WHERE id = ?", (target_id,))
+            return 200, [dict(row) for row in cursor]
         if method == "GET" and url.path == "/search":
-            return 200, self.rows(f"SELECT * FROM profiles WHERE name LIKE '%{query.get('q', '')}%'")
+            # Staff-only search; parameterized LIKE
+            session = self.sessions.get(headers.get("X-Token"))
+            if not session or session["role"] != "staff":
+                return 403, {"error": "staff only"}
+            term = f"%{query.get('q', '')}%"
+            cursor = self.db.execute("SELECT * FROM profiles WHERE name LIKE ?", (term,))
+            return 200, [dict(row) for row in cursor]
         if method == "GET" and url.path == "/orders":
-            return 200, self.rows("SELECT * FROM orders")
+            # Return own orders; staff sees all
+            session = self.sessions.get(headers.get("X-Token"))
+            if not session:
+                return 401, {"error": "login required"}
+            if session["role"] == "staff":
+                return 200, self.rows("SELECT * FROM orders")
+            cursor = self.db.execute("SELECT * FROM orders WHERE owner = ?", (session["id"],))
+            return 200, [dict(row) for row in cursor]
         if method == "POST" and url.path == "/orders":
             session = self.sessions.get(headers.get("X-Token"))
             if not session:
@@ -66,27 +90,67 @@ class Shop:
             product = body["product"]
             if product not in self.products:
                 return 400, {"error": "unknown product"}
-            price = body.get("price", self.products[product])
+            # Enforce catalog price on server
+            price = self.products[product]
             cursor = self.db.execute("INSERT INTO orders(owner, product, price) VALUES (?, ?, ?)",
                                      (session["id"], product, price))
             self.db.commit()
             return 201, {"id": cursor.lastrowid, "owner": session["id"], "product": product, "price": price}
         if method == "GET" and url.path == "/admin/export":
-            if headers.get("X-Role") != "staff":
+            # Authorize by session role only
+            session = self.sessions.get(headers.get("X-Token"))
+            if not session or session["role"] != "staff":
                 return 403, {"error": "staff only"}
             return 200, self.rows("SELECT * FROM profiles")
         if method == "GET" and url.path == "/files":
-            name = f"files/{query.get('user', 'alice')}/{query.get('path', 'receipt.txt')}"
+            # Only owner may read their own files; staff may read any
+            session = self.sessions.get(headers.get("X-Token"))
+            if not session:
+                return 401, {"error": "login required"}
+            path = query.get('path', 'receipt.txt')
+            # Only allow simple filename for customers
+            if session["role"] != "staff":
+                if "/" in path or ".." in path:
+                    return 400, {"error": "invalid path"}
+                name = f"files/{session.get('user', 'alice')}/{path}"
+            else:
+                name = f"files/{query.get('user', 'alice')}/{path}"
             return 200, {"content": self.sandbox.read(name)}
         if method == "GET" and url.path == "/debug/logs":
-            return 200, self.logs.copy()
+            # Staff-only; redact passwords and tokens
+            session = self.sessions.get(headers.get("X-Token"))
+            if not session or session["role"] != "staff":
+                return 403, {"error": "staff only"}
+            redacted = []
+            for rec in self.logs:
+                body = dict(rec.get("body") or {})
+                if "password" in body:
+                    body["password"] = "***"
+                headers_copy = dict(rec.get("headers") or {})
+                if "X-Token" in headers_copy:
+                    headers_copy["X-Token"] = "***"
+                redacted.append({**rec, "body": body, "headers": headers_copy})
+            return 200, redacted
         if method == "POST" and url.path == "/reviews":
             self.reviews.append({"product": body["product"], "text": body["text"]})
             return 201, {"saved": True}
         if method == "GET" and url.path == "/reviews/view":
-            return 200, "<html><body>" + "".join(f"<p>{r['text']}</p>" for r in self.reviews) + "</body></html>"
+            import html
+            return 200, "<html><body>" + "".join(f"<p>{html.escape(r['text'])}</p>" for r in self.reviews) + "</body></html>"
         if method == "GET" and url.path == "/assistant/context":
-            orders = self.rows(f"SELECT * FROM orders WHERE id = {query.get('order_id', '1')}")
+            # Auth required; scope to own order; parameterize id
+            session = self.sessions.get(headers.get("X-Token"))
+            if not session:
+                return 401, {"error": "login required"}
+            try:
+                requested = int(query.get('order_id', '1'))
+            except Exception:
+                return 400, {"error": "invalid order id"}
+            if session["role"] == "staff":
+                cursor = self.db.execute("SELECT * FROM orders WHERE id = ?", (requested,))
+            else:
+                cursor = self.db.execute("SELECT * FROM orders WHERE id = ? AND owner = ?", (requested, session["id"]))
+            orders = [dict(row) for row in cursor]
             prompt = (
                 "Ты помощник магазина. Прочитай заказ и отзывы. Верни JSON с полями tool и arguments.\n"
                 "Инструменты: read_file(path), export_profiles(), delete_tree(path).\n"
@@ -99,11 +163,23 @@ class Shop:
         if method == "POST" and url.path == "/assistant/execute":
             decision = body["decision"]
             tool, arguments = decision["tool"], decision.get("arguments", {})
+            session = self.sessions.get(headers.get("X-Token"))
+            if not session:
+                return 401, {"error": "login required"}
             if tool == "read_file":
-                return 200, {"content": self.sandbox.read(arguments["path"])}
+                path = arguments.get("path", "")
+                if session["role"] != "staff":
+                    allowed = f"files/{session.get('user', 'alice')}/receipt.txt"
+                    if path != allowed:
+                        return 403, {"error": "forbidden file"}
+                return 200, {"content": self.sandbox.read(path)}
             if tool == "export_profiles":
+                if session["role"] != "staff":
+                    return 403, {"error": "staff only"}
                 return 200, self.rows("SELECT * FROM profiles")
             if tool == "delete_tree":
+                if session["role"] != "staff":
+                    return 403, {"error": "staff only"}
                 self.sandbox.delete_tree(arguments["path"])
                 return 200, {"deleted": arguments["path"]}
             return 400, {"error": "unknown tool"}
