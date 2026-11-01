@@ -1,6 +1,6 @@
 # Отчёт 1. Атаки на исходный сервис
 
-Дата: 2026-10-30
+Дата: 2026-11-02
 
 Краткое резюме: сервис содержит множественные уязвимости — SQL-инъекции, IDOR, эскалация привилегий через заголовок X-Role, манипуляции ценой, чтение чужих файлов, XSS в отзывах, утечки через логи и небезопасные действия AI-ассистента. Ниже — PoC и рекомендации.
 
@@ -8,7 +8,7 @@
 - Описание: f-string с подстановкой параметров без экранирования.
 - Эксплуатация: GET /profile?id=1 OR 1=1
 - Эффект: обход фильтрации, утечка всех профилей. Аналогично для order_id в assistant/context.
-- Доказательство: evidence/before/sqli_profile.json, assistant_context_sqli.json
+- Доказательство: evidence/before/sqli_profile.json, search_sqli.json, assistant_context_sqli.json
 - Ремедиирование: использовать параметризованные запросы (SELECT ... WHERE id = ?), валидировать типы.
 
 2) IDOR профилей и заказов
@@ -54,10 +54,11 @@
 - Ремедиирование: HTML-экранирование при выводе.
 
 8) Prompt injection и небезопасная /assistant/execute
-- Описание: сервер исполняет любое решение; клиент может экспортировать профили и удалять файлы.
-- Эксплуатация: POST /assistant/execute с tool=export_profiles, delete_tree(".") или read_file чужого чека.
-- Эффект: утечка данных и уничтожение файлов.
-- Доказательство: evidence/before/assistant_exec_export_profiles.json, assistant_exec_delete_tree.json, assistant_exec_read_bob.json
-- Ремедиирование: валидация решений по ролям и владению; запрет опасных действий клиентам.
+- Описание: отзыв без маркировки доверия попадает в контекст LLM, а исходный исполнитель принимает любое решение без авторизации.
+- Проверка модели: отдельный `shop-planner` на `vsellm/openai/gpt-5` получил отзыв с требованием `export_profiles`. Модель не подчинилась и вернула `tool=refuse`. Это фиксирует неуспешную попытку prompt injection, а не успешный взлом модели.
+- Проверка исполнителя: принудительные POST `/assistant/execute` с `export_profiles`, `delete_tree(".")` и `read_file` чужого чека выполняются для клиента.
+- Эффект: при опасном ответе модели или прямой подмене JSON возможны утечка данных и уничтожение файлов.
+- Доказательства: evidence/before/prompt_injection_input.txt, prompt_injection_model.json, prompt_injection_execution.json, assistant_exec_export_profiles.json, assistant_exec_delete_tree.json, assistant_exec_read_bob.json.
+- Ремедиирование: валидировать решения по серверной сессии и владению, независимо от поведения LLM.
 
 См. полный список и сырцы запросов в practices/practice_06/evidence/before/index.json.

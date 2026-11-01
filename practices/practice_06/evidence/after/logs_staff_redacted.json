@@ -1,0 +1,32 @@
+{
+  "request": {
+    "method": "GET",
+    "path": "/debug/logs",
+    "body": {},
+    "headers": {"X-Token": "beb49060b41f420db223fab23f1a4937"}
+  },
+  "response": {
+    "status": 200,
+    "result": [
+      {
+        "method": "POST",
+        "target": "/login",
+        "body": {"username": "staff", "password": "***"},
+        "headers": {}
+      },
+      {
+        "method": "GET",
+        "target": "/search?q=%27%20OR%201%3D1%20--",
+        "body": {},
+        "headers": {"X-Token": "***"}
+      },
+      {
+        "method": "GET",
+        "target": "/debug/logs",
+        "body": {},
+        "headers": {"X-Token": "***"}
+      }
+    ]
+  },
+  "finding": "Staff can read the log, but both password and X-Token values are redacted."
+}

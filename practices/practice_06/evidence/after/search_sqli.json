@@ -1,0 +1,10 @@
+{
+  "request": {
+    "method": "GET",
+    "path": "/search?q=%27%20OR%201%3D1%20--",
+    "body": {},
+    "headers": {"X-Token": "beb49060b41f420db223fab23f1a4937"}
+  },
+  "response": {"status": 200, "result": []},
+  "finding": "The same payload is handled as a parameterized LIKE value and returns no profiles."
+}

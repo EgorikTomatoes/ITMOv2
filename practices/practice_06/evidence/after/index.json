@@ -3,17 +3,22 @@
   "actions": [
     "idor_profile_alice_reads_bob",
     "sqli_profile",
+    "search_sqli",
     "orders_list_noauth",
     "price_tampering",
     "role_spoof_export",
     "files_cross_user",
     "files_traversal_private",
     "logs_leak",
+    "logs_staff_redacted",
     "reviews_view_xss",
     "assistant_context_sqli",
     "assistant_context_idor",
     "assistant_exec_read_bob",
     "assistant_exec_export_profiles",
-    "assistant_exec_delete_tree"
+    "assistant_exec_delete_tree",
+    "prompt_injection_input",
+    "prompt_injection_model",
+    "prompt_injection_execution"
   ]
 }
