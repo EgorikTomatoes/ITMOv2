@@ -1,0 +1,22 @@
+{
+  "request": {
+    "method": "POST",
+    "path": "/orders",
+    "body": {
+      "product": "lamp",
+      "price": 1
+    },
+    "headers": {
+      "X-Token": "1cffcc8295794e14be7a88b70d428955"
+    }
+  },
+  "response": {
+    "status": 201,
+    "result": {
+      "id": 3,
+      "owner": 1,
+      "product": "lamp",
+      "price": 1500
+    }
+  }
+}

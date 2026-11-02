@@ -1,0 +1,16 @@
+{
+  "request": {
+    "method": "GET",
+    "path": "/profile?id=1 OR 1=1",
+    "body": {},
+    "headers": {
+      "X-Token": "1cffcc8295794e14be7a88b70d428955"
+    }
+  },
+  "response": {
+    "status": 400,
+    "result": {
+      "error": "invalid id"
+    }
+  }
+}

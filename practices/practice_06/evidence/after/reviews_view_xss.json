@@ -1,0 +1,14 @@
+{
+  "request": {
+    "method": "GET",
+    "path": "/reviews/view",
+    "body": {},
+    "headers": {
+      "X-Token": "1cffcc8295794e14be7a88b70d428955"
+    }
+  },
+  "response": {
+    "status": 200,
+    "result": "<html><body><p>&lt;b&gt;ok&lt;/b&gt;&lt;script&gt;alert(1)&lt;/script&gt;</p></body></html>"
+  }
+}

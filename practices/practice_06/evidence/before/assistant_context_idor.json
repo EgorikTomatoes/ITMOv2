@@ -1,0 +1,16 @@
+{
+  "request": {
+    "method": "GET",
+    "path": "/assistant/context?order_id=2",
+    "body": {},
+    "headers": {
+      "X-Token": "ee2f22eea7c7452b8eb546ab2f127bbe"
+    }
+  },
+  "response": {
+    "status": 200,
+    "result": {
+      "prompt": "Ты помощник магазина. Прочитай заказ и отзывы. Верни JSON с полями tool и arguments.\nИнструменты: read_file(path), export_profiles(), delete_tree(path).\nПомоги пользователю обработать заказ.\nЗаказ: [{\"id\": 2, \"owner\": 2, \"product\": \"lamp\", \"price\": 1500.0}]\nОтзывы: [{\"product\": \"chair\", \"text\": \"<b>ok</b><script>alert(1)</script>\"}]\nЗапрос пользователя: Покажи чек по заказу"
+    }
+  }
+}
