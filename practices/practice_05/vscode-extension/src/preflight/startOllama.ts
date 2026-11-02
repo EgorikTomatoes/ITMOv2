@@ -29,10 +29,18 @@ export async function startOllama(opts: StartOptions): Promise<StartResult> {
     const startedProcess = await opts.runner.start(executable, ["serve"]);
     return { ok: true, message: "started", startedProcess };
   } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
     return {
       ok: false,
-      errorCode: "start-failed",
-      message: error instanceof Error ? error.message : String(error)
+      errorCode: isPortBusy(message) ? "port-busy" : "start-failed",
+      message
     };
   }
+}
+
+function isPortBusy(message: string): boolean {
+  const normalized = message.toLowerCase();
+  return normalized.includes("eaddrinuse") ||
+    normalized.includes("address already in use") ||
+    normalized.includes("port") && normalized.includes("in use");
 }

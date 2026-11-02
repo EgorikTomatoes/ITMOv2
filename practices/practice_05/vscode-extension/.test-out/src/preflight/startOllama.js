@@ -22,10 +22,17 @@ async function startOllama(opts) {
         return { ok: true, message: "started", startedProcess };
     }
     catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
         return {
             ok: false,
-            errorCode: "start-failed",
-            message: error instanceof Error ? error.message : String(error)
+            errorCode: isPortBusy(message) ? "port-busy" : "start-failed",
+            message
         };
     }
+}
+function isPortBusy(message) {
+    const normalized = message.toLowerCase();
+    return normalized.includes("eaddrinuse") ||
+        normalized.includes("address already in use") ||
+        normalized.includes("port") && normalized.includes("in use");
 }

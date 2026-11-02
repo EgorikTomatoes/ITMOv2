@@ -1,42 +1,35 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.waitUntilOllamaReady = waitUntilOllamaReady;
+const checkOllamaStatus_1 = require("./checkOllamaStatus");
 async function waitUntilOllamaReady(opts) {
-    const { fetcher, baseUrl, startDeadlineMs = 15000, pollIntervalMs = 500, maxAttempts = 30, signal } = opts;
-    const deadline = Date.now() + startDeadlineMs;
+    const { fetcher, baseUrl, startDeadlineMs = 15000, pollIntervalMs = 500, maxAttempts = 30, signal, now = Date.now, sleep = sleepWithSignal } = opts;
+    const deadline = now() + startDeadlineMs;
     let attempts = 0;
-    while (Date.now() < deadline && attempts < maxAttempts) {
+    while (now() < deadline && attempts < maxAttempts) {
         if (signal?.aborted) {
             return { state: "error", errorCode: "user-cancelled", message: "cancelled" };
         }
         attempts++;
-        try {
-            const resp = await fetcher(`${baseUrl.replace(/\/$/, "")}/api/version`, { method: "GET", signal });
-            if (resp.ok && await isOllamaVersionResponse(resp)) {
-                return { state: "running" };
-            }
+        const remainingMs = Math.max(1, deadline - now());
+        const status = await (0, checkOllamaStatus_1.checkOllamaStatus)(fetcher, {
+            baseUrl,
+            timeoutMs: Math.min(1500, remainingMs),
+            signal
+        });
+        if (status.state === "running") {
+            return status;
         }
-        catch {
-            if (signal?.aborted)
-                return { state: "error", errorCode: "user-cancelled", message: "cancelled" };
+        if (status.errorCode === "user-cancelled") {
+            return status;
         }
-        if (attempts < maxAttempts && Date.now() < deadline) {
-            await sleep(pollIntervalMs, signal);
+        if (attempts < maxAttempts && now() < deadline) {
+            await sleep(Math.min(pollIntervalMs, Math.max(0, deadline - now())), signal);
         }
     }
     return { state: "error", errorCode: "start-timeout", message: "timeout" };
 }
-async function isOllamaVersionResponse(response) {
-    try {
-        const body = await response.json();
-        return typeof body === "object" && body !== null &&
-            "version" in body && typeof body.version === "string";
-    }
-    catch {
-        return false;
-    }
-}
-function sleep(ms, signal) {
+function sleepWithSignal(ms, signal) {
     return new Promise((resolve) => {
         const timeout = setTimeout(resolve, ms);
         signal?.addEventListener("abort", () => {

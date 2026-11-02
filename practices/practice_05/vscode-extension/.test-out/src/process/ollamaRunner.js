@@ -32,10 +32,15 @@ function createNodeProcessRunner(environment = process.env) {
         async start(executable, args) {
             const child = (0, node_child_process_1.spawn)(executable, [...args], {
                 detached: true,
-                stdio: "ignore"
+                stdio: ["ignore", "ignore", "pipe"]
+            });
+            let stderr = "";
+            child.stderr?.on("data", (chunk) => {
+                // Startup diagnostics are used only for classification and kept bounded.
+                stderr = `${stderr}${String(chunk)}`.slice(-4096);
             });
             const exited = new Promise((resolve) => {
-                child.once("exit", (code, signal) => resolve({ code, signal }));
+                child.once("exit", (code, signal) => resolve({ code, signal, stderr }));
             });
             await new Promise((resolve, reject) => {
                 child.once("spawn", resolve);

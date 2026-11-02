@@ -2,14 +2,14 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.checkOllamaStatus = checkOllamaStatus;
 async function checkOllamaStatus(fetcher, options) {
-    const { baseUrl, timeoutMs = 1500, signal } = options;
+    const { baseUrl, timeoutMs = 1500, signal, canStartLocal = false } = options;
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(new Error("timeout")), timeoutMs);
     try {
         const url = `${baseUrl.replace(/\/$/, "")}/api/version`;
         const resp = await fetcher(url, { method: "GET", signal: mergeSignals(signal, controller.signal) });
         if (!resp.ok) {
-            return { state: "error", errorCode: "http-error", message: `HTTP ${resp.status}` };
+            return { state: "error", errorCode: "http-error", message: `HTTP ${resp.status}`, canStartLocal };
         }
         // Validate Ollama-specific shape to avoid false positives on unrelated services.
         let body;
@@ -17,26 +17,26 @@ async function checkOllamaStatus(fetcher, options) {
             body = await resp.json();
         }
         catch {
-            return { state: "error", errorCode: "http-error", message: "Invalid API response" };
+            return { state: "error", errorCode: "http-error", message: "Invalid API response", canStartLocal };
         }
         if (typeof body !== "object" || body === null || !("version" in body) || typeof body.version !== "string") {
-            return { state: "error", errorCode: "http-error", message: "Invalid API response" };
+            return { state: "error", errorCode: "http-error", message: "Invalid API response", canStartLocal };
         }
-        return { state: "running", canStartLocal: inferCanStartLocal(baseUrl) };
+        return { state: "running", canStartLocal };
     }
     catch (e) {
         // Distinguish cancellation vs timeout vs network error vs stopped
         if (isProvidedSignalAborted(signal)) {
-            return { state: "error", errorCode: "user-cancelled", message: "Cancelled" };
+            return { state: "error", errorCode: "user-cancelled", message: "Cancelled", canStartLocal: false };
         }
         if (isAbortTimeout(controller.signal)) {
-            return { state: "error", errorCode: "health-timeout", message: "Health check timeout" };
+            return { state: "error", errorCode: "health-timeout", message: "Health check timeout", canStartLocal };
         }
         const msg = errorMessage(e);
         if (isConnectionRefused(msg)) {
-            return { state: "stopped", canStartLocal: inferCanStartLocal(baseUrl) };
+            return { state: "stopped", canStartLocal };
         }
-        return { state: "error", errorCode: "network-error", message: msg, canStartLocal: inferCanStartLocal(baseUrl) };
+        return { state: "error", errorCode: "network-error", message: msg, canStartLocal };
     }
     finally {
         clearTimeout(timeout);
@@ -92,13 +92,4 @@ function isConnectionRefused(msg) {
         m.includes("enotfound") ||
         m.includes("could not connect") ||
         m.includes("connect"));
-}
-function inferCanStartLocal(baseUrl) {
-    try {
-        const u = new URL(baseUrl);
-        return ["localhost", "127.0.0.1", "::1"].includes(u.hostname);
-    }
-    catch {
-        return false;
-    }
 }

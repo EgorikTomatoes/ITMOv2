@@ -5,7 +5,7 @@ import { delimiter, join } from "node:path";
 
 export interface StartedProcess {
   pid?: number;
-  exited: Promise<{ code: number | null; signal: string | null }>;
+  exited: Promise<{ code: number | null; signal: string | null; stderr?: string }>;
   stop(): Promise<void>;
 }
 
@@ -45,10 +45,15 @@ export function createNodeProcessRunner(
     async start(executable, args): Promise<StartedProcess> {
       const child = spawn(executable, [...args], {
         detached: true,
-        stdio: "ignore"
+        stdio: ["ignore", "ignore", "pipe"]
       });
-      const exited = new Promise<{ code: number | null; signal: string | null }>((resolve) => {
-        child.once("exit", (code, signal) => resolve({ code, signal }));
+      let stderr = "";
+      child.stderr?.on("data", (chunk: Buffer | string) => {
+        // Startup diagnostics are used only for classification and kept bounded.
+        stderr = `${stderr}${String(chunk)}`.slice(-4096);
+      });
+      const exited = new Promise<{ code: number | null; signal: string | null; stderr?: string }>((resolve) => {
+        child.once("exit", (code, signal) => resolve({ code, signal, stderr }));
       });
 
       await new Promise<void>((resolve, reject) => {
