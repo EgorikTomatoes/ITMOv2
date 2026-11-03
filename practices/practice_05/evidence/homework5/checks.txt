@@ -1,0 +1,40 @@
+Homework 5 verification
+Date: 2026-11-02
+Command: npm run check
+
+ESLint: PASS
+Tests: PASS (23/23)
+Compilation: PASS
+
+Passed tests:
+1. command inserts the translated variable at the cursor
+2. command does not edit the document when input is cancelled
+3. translator requests Ollama and returns a snake case variable name
+4. translator explains how to start Ollama when the connection fails
+5. translator explains how to create a missing model
+6. translator rejects a service message instead of inserting patch_failed
+7. formatting returns camelCase and PascalCase and UPPER_SNAKE_CASE
+8. checkOllamaStatus returns running only for an Ollama version response
+9. checkOllamaStatus classifies a refused local connection as stopped
+10. checkOllamaStatus reads ECONNREFUSED from the cause of Node fetch failed
+11. checkOllamaStatus aborts a hanging request at the configured timeout
+12. startOllama uses the resolved executable and fixed serve argument
+13. startOllama reports missing executable and spawn errors
+14. startOllama classifies an occupied port reported during spawn
+15. waitUntilOllamaReady retries until the Ollama API becomes available
+16. waitUntilOllamaReady returns start-timeout after bounded attempts
+17. waitUntilOllamaReady aborts a hanging request at the overall deadline
+18. orchestrator stops before translation flow when the user cancels
+19. orchestrator finishes immediately when progress cancellation aborts the check
+20. orchestrator does not offer local start on an unsupported platform
+21. orchestrator starts Ollama, waits for readiness, then continues
+22. orchestrator stops only the process it started when readiness times out
+23. orchestrator classifies an occupied Ollama port from early process exit
+
+Final TAP summary:
+tests 23
+pass 23
+fail 0
+cancelled 0
+skipped 0
+todo 0
