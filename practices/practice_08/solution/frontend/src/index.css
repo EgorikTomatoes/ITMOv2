@@ -8,7 +8,10 @@ body { margin: 0; min-width: 320px; min-height: 100vh; background: #070b11; colo
 button, input, select { font: inherit; }
 button { transition: all .2s ease; }
 button:active { transform: scale(.98); }
-button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid #b8f43d; outline-offset: 3px; }
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible {
+  outline: 3px solid #b8f43d !important;
+  outline-offset: 3px !important;
+}
 input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { appearance: none; margin: 0; }
 .panel { @apply rounded-2xl border border-line bg-panel; }
 .label { @apply text-sm font-medium text-muted; }

@@ -6,12 +6,15 @@
   "scripts": {
     "dev": "concurrently -n API,WEB -c cyan,green \"npm run dev -w backend\" \"npm run dev -w frontend\"",
     "build": "npm run build -w frontend",
-    "test": "npm run test:unit && npm run test:client",
+    "test": "npm run test:unit && npm run test:client && npm run test:design",
     "test:unit": "vitest run tests",
     "test:client": "npm run test -w frontend",
+    "test:design": "playwright test",
+    "test:design:update": "playwright test --update-snapshots",
     "reset": "node backend/data/reset.js"
   },
   "devDependencies": {
+    "@playwright/test": "^1.49.1",
     "concurrently": "^9.1.2",
     "vitest": "^4.0.0"
   }

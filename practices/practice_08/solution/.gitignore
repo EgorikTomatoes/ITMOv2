@@ -6,3 +6,5 @@ backend/data/database.json
 .env
 .idea/
 .vscode/
+test-results/
+playwright-report/
