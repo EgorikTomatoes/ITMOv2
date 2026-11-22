@@ -1,0 +1,986 @@
+{
+  "name": "Github AIReviewer",
+  "nodes": [
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 4
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ ($json.body.comment.body).trim() }}",
+                    "rightValue": "/make_ai_review",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "55e05453-a4d0-4333-a93a-d2ac715700da"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 4
+                },
+                "conditions": [
+                  {
+                    "id": "582ce9a3-f6fc-48e3-8585-ebaa258f5541",
+                    "leftValue": "={{ ($json.body.comment.body).trim() }}",
+                    "rightValue": "/make_other_ai_review",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.5,
+      "position": [
+        1456,
+        1648
+      ],
+      "id": "6469aca2-9115-4fae-8258-5937aa4c21bf",
+      "name": "Switch1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.github.com/repos/EgorikTomatoes/test-n8n/pulls/{{ $('On Comment GitHub Trigger').first().json.body.issue.number }}/reviews",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "githubApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/vnd.github+json"
+            },
+            {
+              "name": "X-GitHub-Api-Version",
+              "value": "2022-11-28"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ body: $('Ai review agent 1').first().json.output.body ?? $('Ai review agent 1').first().json.output.summary ?? '', event: 'COMMENT', comments: ($('Ai review agent 1').first().json.output.comments ?? []).map(c => ({ path: c.path, line: Number(c.line), side: 'RIGHT', body: c.body })) }) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2896,
+        1184
+      ],
+      "name": "Create Inline PR Review1",
+      "id": "66897e33-b7c9-4dcb-a7b4-b2dfb73b342e",
+      "credentials": {
+        "githubApi": {
+          "id": "agMSFSxIkBM5TyuW",
+          "name": "GitHub account 38"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "owner": {
+          "__rl": true,
+          "value": "EgorikTomatoes",
+          "mode": "list",
+          "cachedResultName": "EgorikTomatoes",
+          "cachedResultUrl": "https://github.com/EgorikTomatoes"
+        },
+        "repository": {
+          "__rl": true,
+          "value": "test-n8n",
+          "mode": "list",
+          "cachedResultName": "test-n8n",
+          "cachedResultUrl": "https://github.com/EgorikTomatoes/test-n8n"
+        },
+        "events": [
+          "issue_comment"
+        ],
+        "options": {}
+      },
+      "type": "n8n-nodes-base.githubTrigger",
+      "typeVersion": 1,
+      "position": [
+        1264,
+        1648
+      ],
+      "id": "3d8ab4b2-4fd1-42a7-94d8-73fda4035e54",
+      "name": "On Comment GitHub Trigger",
+      "webhookId": "3f92e4b6-5a73-4714-be29-fec0a55cf8bf",
+      "credentials": {
+        "githubApi": {
+          "id": "agMSFSxIkBM5TyuW",
+          "name": "GitHub account 38"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "rowNotExists",
+        "dataTableId": {
+          "__rl": true,
+          "value": "nNwxryTivIvvfedV",
+          "mode": "list",
+          "cachedResultName": "PR_Reviews",
+          "cachedResultUrl": "/projects/FCTo4lB2XkyLA9VV/datatables/nNwxryTivIvvfedV"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "PullRequestID",
+              "keyValue": "={{ $json.body.issue.id }}"
+            },
+            {
+              "keyName": "IsFirstReviewDone",
+              "keyValue": "True"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1712,
+        1520
+      ],
+      "id": "798ae298-7a12-49a9-bf7b-56a0960bb62a",
+      "name": "Checking first command existing"
+    },
+    {
+      "parameters": {
+        "operation": "rowNotExists",
+        "dataTableId": {
+          "__rl": true,
+          "value": "nNwxryTivIvvfedV",
+          "mode": "list",
+          "cachedResultName": "PR_Reviews",
+          "cachedResultUrl": "/projects/FCTo4lB2XkyLA9VV/datatables/nNwxryTivIvvfedV"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "PullRequestID",
+              "keyValue": "={{ $json.body.issue.id }}"
+            },
+            {
+              "keyName": "IsSecondReviewDone",
+              "keyValue": "True"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1712,
+        1744
+      ],
+      "id": "25e1ef60-9da6-4af2-ad00-6bb09c81e653",
+      "name": "Checking second command existing"
+    },
+    {
+      "parameters": {
+        "resource": "pullRequest",
+        "operation": "getDiff",
+        "pullRequestNumber": "={{ $json.body.issue.number }}",
+        "owner": {
+          "__rl": true,
+          "value": "EgorikTomatoes",
+          "mode": "list",
+          "cachedResultName": "EgorikTomatoes",
+          "cachedResultUrl": "https://github.com/EgorikTomatoes"
+        },
+        "repository": {
+          "__rl": true,
+          "value": "test-n8n",
+          "mode": "list",
+          "cachedResultName": "test-n8n",
+          "cachedResultUrl": "https://github.com/EgorikTomatoes/test-n8n"
+        }
+      },
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "position": [
+        1952,
+        1392
+      ],
+      "id": "61003782-1a19-405b-8d58-d61c1402b00e",
+      "name": "Get a pull request diff 1",
+      "webhookId": "d3676b03-643e-49db-adbb-1c254f846ddd",
+      "credentials": {
+        "githubApi": {
+          "id": "agMSFSxIkBM5TyuW",
+          "name": "GitHub account 38"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "pullRequest",
+        "operation": "getDiff",
+        "pullRequestNumber": "={{ $json.body.issue.number }}",
+        "owner": {
+          "__rl": true,
+          "value": "EgorikTomatoes",
+          "mode": "list",
+          "cachedResultName": "EgorikTomatoes",
+          "cachedResultUrl": "https://github.com/EgorikTomatoes"
+        },
+        "repository": {
+          "__rl": true,
+          "value": "test-n8n",
+          "mode": "list",
+          "cachedResultName": "test-n8n",
+          "cachedResultUrl": "https://github.com/EgorikTomatoes/test-n8n"
+        }
+      },
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "position": [
+        1952,
+        1888
+      ],
+      "id": "01464865-45be-4e8c-899a-8c711066c660",
+      "name": "Get a pull request diff 2",
+      "webhookId": "d3676b03-643e-49db-adbb-1c254f846ddd",
+      "credentials": {
+        "githubApi": {
+          "id": "agMSFSxIkBM5TyuW",
+          "name": "GitHub account 38"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "openai/gpt-5",
+          "mode": "list",
+          "cachedResultName": "openai/gpt-5"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        2176,
+        1600
+      ],
+      "id": "81e204c4-3c75-4726-b0ba-9315a5484bb3",
+      "name": "GPT5 model",
+      "credentials": {
+        "openAiApi": {
+          "id": "olK7PaVmAnnlpgun",
+          "name": "OpenAI account 27"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "anthropic/claude-sonnet-4.6",
+          "mode": "list",
+          "cachedResultName": "anthropic/claude-sonnet-4.6"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        2176,
+        2112
+      ],
+      "id": "293c5fa9-7776-42b0-ad1f-8a5c47225b38",
+      "name": "sonnet4.6 model",
+      "credentials": {
+        "openAiApi": {
+          "id": "olK7PaVmAnnlpgun",
+          "name": "OpenAI account 27"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Ты — опытный Senior Code Reviewer. Твоя задача — провести практичное, конструктивное и умеренно лояльное ревью автоматически сгенерированного исправления бага.\n\nГлавная цель ревью — определить, можно ли безопасно принять предложенные изменения, а не искать максимальное количество недостатков.\n\nАнализируй только реально изменённые строки unified diff Pull Request и необходимый контекст вокруг них.\n\n## 1. Принципы ревью\n\n- Сосредоточься прежде всего на корректности исправления.\n- Проверяй реальные ошибки, крайние случаи, безопасность и возможные регрессии.\n- Учитывай масштаб изменений и назначение проекта.\n- Не требуй идеальной архитектуры от небольшого исправления.\n- Не предлагай рефакторинг, не связанный с текущим багом.\n- Не придирайся к стилю, форматированию, названиям переменных и мелким оптимизациям.\n- Не отклоняй PR только из-за недостаточной документации.\n- Не отклоняй PR исключительно из-за отсутствия новых тестов.\n- Не считай гипотетическую проблему доказанной ошибкой.\n- Не требуй улучшений, которые выходят за рамки исправляемого бага.\n\n## 2. Критерии вердикта\n\n### ACCEPT\n\nВыдавай `Accept`, если:\n\n- Изменения выглядят логичными и корректными.\n- Нет конкретных доказательств серьёзной ошибки.\n- Исправление не создаёт очевидных регрессий.\n- Код не содержит явных серьёзных уязвимостей.\n- Недостатки ограничиваются мелкими и некритичными замечаниями.\n- Существуют потенциальные улучшения, но они не препятствуют работе исправления.\n\nПри наличии замечаний уровня low или medium разрешается возвращать Accept.\n\nНе требуй абсолютной уверенности в корректности кода.\n\n### REJECT\n\nВыдавай `Reject` только при наличии конкретной, воспроизводимой или непосредственно обоснованной серьёзной проблемы:\n\n- Исправление очевидно не работает.\n- Добавлена логическая ошибка, нарушающая основную функциональность.\n- Изменения приводят к явной регрессии.\n- Обнаружена серьёзная уязвимость безопасности.\n- Код содержит синтаксическую ошибку, препятствующую выполнению.\n- Исправление удаляет или ломает важную существующую функциональность.\n- Нарушено обязательное условие, явно следующее из доступного контекста.\n\nКаждый Reject должен быть обоснован конкретной проблемой в изменённом коде.\n\nЕсли серьёзная проблема не обнаружена, выбирай Accept.\n\n## 3. Приоритеты замечаний\n\nИспользуй следующие уровни:\n\n- [critical] — серьёзная уязвимость, потеря данных или критическая поломка.\n- [high] — подтверждённая существенная ошибка или регрессия.\n- [medium] — ограниченная проблема или важное, но не блокирующее улучшение.\n- [low] — необязательное улучшение читаемости, стиля или производительности.\n\nПравила:\n\n- [critical] и [high] → Reject.\n- Только [medium] и [low] → Accept.\n- Нет замечаний → Accept.\n- Не повышай уровень серьёзности ради формального отклонения PR.\n- Для Reject обязательно укажи, что именно сломается, при каких условиях и как исправить проблему.\n\n## 4. Работа с unified diff\n\n- Анализируй изменённые строки и контекст вокруг них.\n- Не придумывай ошибки в файлах, которые не представлены в diff.\n- Не делай неподтверждённых предположений о поведении приложения.\n- Если доступного контекста недостаточно для доказательства проблемы, опиши ограничение в summary, но не выдавай Reject только на основании предположений.\n- Не выдавай замечания ради заполнения массива comments.\n\n## 5. Inline-комментарии\n\n- comments содержит только конкретные проблемы, максимум 10.\n- path — точный путь файла из строки `diff --git a/... b/...`, без префикса `a/` или `b/`.\n- line — номер строки на правой стороне diff, а НЕ позиция строки в diff.\n- Для подсчёта номера используй заголовки `@@ -старый,количество +новый,количество @@`.\n- Для строк с `+` и пробелом увеличивай номер новой строки.\n- Для строк с `-` номер новой строки не увеличивай.\n- side всегда RIGHT.\n- Комментируй только реально изменённые строки, присутствующие на правой стороне diff.\n- Для удалённых строк используй ближайшую подходящую добавленную строку, если это логично. В противном случае опиши замечание в summary.\n- Не придумывай номера строк и пути.\n- Не повторяй весь summary в inline-комментариях.\n\n## 6. Формат ответа\n\nОтветь ТОЛЬКО валидным JSON без Markdown и без блоков кода.\n\nСтруктура:\n\n{\n  \"summary\": \"Краткое ревью на русском языке с итоговой оценкой и конкретными замечаниями\",\n  \"comments\": [\n    {\n      \"path\": \"src/file.cpp\",\n      \"line\": 15,\n      \"side\": \"RIGHT\",\n      \"body\": \"[medium] Описание конкретной проблемы и предлагаемого исправления\"\n    }\n  ],\n  \"verdict\": \"Accept\",\n  \"commitTitle\": \"Краткое название коммита при merge\",\n  \"commitBody\": \"Описание внесённых изменений\"\n}\n\n## 7. Дополнительные требования\n\n- verdict может быть только `Accept` или `Reject`.\n- Если замечаний нет, comments должен быть пустым массивом.\n- Если diff пуст или недоступен, укажи это в summary, верни comments = [] и verdict = Reject, поскольку проверить изменения невозможно.\n- Не добавляй поля, которые отсутствуют в схеме.\n- commitTittle и commitBody заполняй при любом результате.\n- Название коммита должно быть кратким, понятным и соответствовать реальным изменениям.\n- Не утверждай, что исправление проверено тестами, если результаты тестов не предоставлены.\n- Accept означает, что ревью не обнаружило блокирующих проблем, а не то, что исправление гарантированно работает.\n- Не используй оценку качества кода в качестве самостоятельной причины отклонения PR.\n\n## 8. Финальное правило\n\nПеред выдачей Reject задай себе три вопроса:\n\n1. Есть ли конкретная серьёзная ошибка в изменённом коде?\n2. Можно ли объяснить, как именно она проявится?\n3. Действительно ли эту проблему необходимо устранить до merge?\n\nЕсли хотя бы на один вопрос нет обоснованного положительного ответа, выбирай Accept и, при необходимости, добавляй неблокирующее замечание.\n\n## DIFF\n\n{{ $json.diff }}",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        2176,
+        1392
+      ],
+      "id": "5c5e1673-8b9a-4509-ac96-c75fc0aa70ae",
+      "name": "Ai review agent 1"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Ты — опытный Senior Code Reviewer. Твоя задача — провести практичное, конструктивное и умеренно лояльное ревью автоматически сгенерированного исправления бага.\n\nГлавная цель ревью — определить, можно ли безопасно принять предложенные изменения, а не искать максимальное количество недостатков.\n\nАнализируй только реально изменённые строки unified diff Pull Request и необходимый контекст вокруг них.\n\n## 1. Принципы ревью\n\n- Сосредоточься прежде всего на корректности исправления.\n- Проверяй реальные ошибки, крайние случаи, безопасность и возможные регрессии.\n- Учитывай масштаб изменений и назначение проекта.\n- Не требуй идеальной архитектуры от небольшого исправления.\n- Не предлагай рефакторинг, не связанный с текущим багом.\n- Не придирайся к стилю, форматированию, названиям переменных и мелким оптимизациям.\n- Не отклоняй PR только из-за недостаточной документации.\n- Не отклоняй PR исключительно из-за отсутствия новых тестов.\n- Не считай гипотетическую проблему доказанной ошибкой.\n- Не требуй улучшений, которые выходят за рамки исправляемого бага.\n\n## 2. Критерии вердикта\n\n### ACCEPT\n\nВыдавай `Accept`, если:\n\n- Изменения выглядят логичными и корректными.\n- Нет конкретных доказательств серьёзной ошибки.\n- Исправление не создаёт очевидных регрессий.\n- Код не содержит явных серьёзных уязвимостей.\n- Недостатки ограничиваются мелкими и некритичными замечаниями.\n- Существуют потенциальные улучшения, но они не препятствуют работе исправления.\n\nПри наличии замечаний уровня low или medium разрешается возвращать Accept.\n\nНе требуй абсолютной уверенности в корректности кода.\n\n### REJECT\n\nВыдавай `Reject` только при наличии конкретной, воспроизводимой или непосредственно обоснованной серьёзной проблемы:\n\n- Исправление очевидно не работает.\n- Добавлена логическая ошибка, нарушающая основную функциональность.\n- Изменения приводят к явной регрессии.\n- Обнаружена серьёзная уязвимость безопасности.\n- Код содержит синтаксическую ошибку, препятствующую выполнению.\n- Исправление удаляет или ломает важную существующую функциональность.\n- Нарушено обязательное условие, явно следующее из доступного контекста.\n\nКаждый Reject должен быть обоснован конкретной проблемой в изменённом коде.\n\nЕсли серьёзная проблема не обнаружена, выбирай Accept.\n\n## 3. Приоритеты замечаний\n\nИспользуй следующие уровни:\n\n- [critical] — серьёзная уязвимость, потеря данных или критическая поломка.\n- [high] — подтверждённая существенная ошибка или регрессия.\n- [medium] — ограниченная проблема или важное, но не блокирующее улучшение.\n- [low] — необязательное улучшение читаемости, стиля или производительности.\n\nПравила:\n\n- [critical] и [high] → Reject.\n- Только [medium] и [low] → Accept.\n- Нет замечаний → Accept.\n- Не повышай уровень серьёзности ради формального отклонения PR.\n- Для Reject обязательно укажи, что именно сломается, при каких условиях и как исправить проблему.\n\n## 4. Работа с unified diff\n\n- Анализируй изменённые строки и контекст вокруг них.\n- Не придумывай ошибки в файлах, которые не представлены в diff.\n- Не делай неподтверждённых предположений о поведении приложения.\n- Если доступного контекста недостаточно для доказательства проблемы, опиши ограничение в summary, но не выдавай Reject только на основании предположений.\n- Не выдавай замечания ради заполнения массива comments.\n\n## 5. Inline-комментарии\n\n- comments содержит только конкретные проблемы, максимум 10.\n- path — точный путь файла из строки `diff --git a/... b/...`, без префикса `a/` или `b/`.\n- line — номер строки на правой стороне diff, а НЕ позиция строки в diff.\n- Для подсчёта номера используй заголовки `@@ -старый,количество +новый,количество @@`.\n- Для строк с `+` и пробелом увеличивай номер новой строки.\n- Для строк с `-` номер новой строки не увеличивай.\n- side всегда RIGHT.\n- Комментируй только реально изменённые строки, присутствующие на правой стороне diff.\n- Для удалённых строк используй ближайшую подходящую добавленную строку, если это логично. В противном случае опиши замечание в summary.\n- Не придумывай номера строк и пути.\n- Не повторяй весь summary в inline-комментариях.\n\n## 6. Формат ответа\n\nОтветь ТОЛЬКО валидным JSON без Markdown и без блоков кода.\n\nСтруктура:\n\n{\n  \"summary\": \"Краткое ревью на русском языке с итоговой оценкой и конкретными замечаниями\",\n  \"comments\": [\n    {\n      \"path\": \"src/file.cpp\",\n      \"line\": 15,\n      \"side\": \"RIGHT\",\n      \"body\": \"[medium] Описание конкретной проблемы и предлагаемого исправления\"\n    }\n  ],\n  \"verdict\": \"Accept\",\n  \"commitTitle\": \"Краткое название коммита при merge\",\n  \"commitBody\": \"Описание внесённых изменений\"\n}\n\n## 7. Дополнительные требования\n\n- verdict может быть только `Accept` или `Reject`.\n- Если замечаний нет, comments должен быть пустым массивом.\n- Если diff пуст или недоступен, укажи это в summary, верни comments = [] и verdict = Reject, поскольку проверить изменения невозможно.\n- Не добавляй поля, которые отсутствуют в схеме.\n- commitTittle и commitBody заполняй при любом результате.\n- Название коммита должно быть кратким, понятным и соответствовать реальным изменениям.\n- Не утверждай, что исправление проверено тестами, если результаты тестов не предоставлены.\n- Accept означает, что ревью не обнаружило блокирующих проблем, а не то, что исправление гарантированно работает.\n- Не используй оценку качества кода в качестве самостоятельной причины отклонения PR.\n\n## 8. Финальное правило\n\nПеред выдачей Reject задай себе три вопроса:\n\n1. Есть ли конкретная серьёзная ошибка в изменённом коде?\n2. Можно ли объяснить, как именно она проявится?\n3. Действительно ли эту проблему необходимо устранить до merge?\n\nЕсли хотя бы на один вопрос нет обоснованного положительного ответа, выбирай Accept и, при необходимости, добавляй неблокирующее замечание.\n\n## DIFF\n\n{{ $json.diff }}",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        2176,
+        1888
+      ],
+      "id": "e3d30df1-0e3f-4e22-9581-e9ba6572b913",
+      "name": "Ai review agent 2"
+    },
+    {
+      "parameters": {
+        "operation": "edit",
+        "owner": {
+          "__rl": true,
+          "value": "EgorikTomatoes",
+          "mode": "list",
+          "cachedResultName": "EgorikTomatoes",
+          "cachedResultUrl": "https://github.com/EgorikTomatoes"
+        },
+        "repository": {
+          "__rl": true,
+          "value": "test-n8n",
+          "mode": "list",
+          "cachedResultName": "test-n8n",
+          "cachedResultUrl": "https://github.com/EgorikTomatoes/test-n8n"
+        },
+        "issueNumber": "={{ $('On Comment GitHub Trigger').first().json.body.issue.number }}",
+        "editFields": {
+          "labels": [
+            {
+              "label": "AI-Reviewed"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "position": [
+        2896,
+        1632
+      ],
+      "id": "fd4ba017-f501-4fd6-be10-3bebe2fe7528",
+      "name": "Add label 1",
+      "webhookId": "703d84d8-3439-411c-aea0-c5691aebf391",
+      "credentials": {
+        "githubApi": {
+          "id": "agMSFSxIkBM5TyuW",
+          "name": "GitHub account 38"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "dataTableId": {
+          "__rl": true,
+          "value": "nNwxryTivIvvfedV",
+          "mode": "list",
+          "cachedResultName": "PR_Reviews",
+          "cachedResultUrl": "/projects/FCTo4lB2XkyLA9VV/datatables/nNwxryTivIvvfedV"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "PullRequestID",
+              "keyValue": "={{ $('On Comment GitHub Trigger').first().json.body.issue.id }}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "ReviewText": "={{ $json.output.summary }}",
+            "IsFirstReviewDone": true,
+            "PullRequestID": "={{ $('On Comment GitHub Trigger').first().json.body.issue.id }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "PullRequestID",
+              "displayName": "PullRequestID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "ReviewText",
+              "displayName": "ReviewText",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "OtherReviewText",
+              "displayName": "OtherReviewText",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "IsFirstReviewDone",
+              "displayName": "IsFirstReviewDone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "IsSecondReviewDone",
+              "displayName": "IsSecondReviewDone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "readOnly": false,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        3120,
+        1392
+      ],
+      "id": "5cc58aca-2210-4802-b771-7eccfbecdaec",
+      "name": "Update DB 1"
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "dataTableId": {
+          "__rl": true,
+          "value": "nNwxryTivIvvfedV",
+          "mode": "list",
+          "cachedResultName": "PR_Reviews",
+          "cachedResultUrl": "/projects/FCTo4lB2XkyLA9VV/datatables/nNwxryTivIvvfedV"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "PullRequestID",
+              "keyValue": "={{ $('On Comment GitHub Trigger').first().json.body.issue.id }}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "OtherReviewText": "={{ $json.output.summary }}",
+            "IsSecondReviewDone": true,
+            "PullRequestID": "={{ $('On Comment GitHub Trigger').first().json.body.issue.id }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "PullRequestID",
+              "displayName": "PullRequestID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "ReviewText",
+              "displayName": "ReviewText",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "OtherReviewText",
+              "displayName": "OtherReviewText",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "IsFirstReviewDone",
+              "displayName": "IsFirstReviewDone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "IsSecondReviewDone",
+              "displayName": "IsSecondReviewDone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        3120,
+        1888
+      ],
+      "id": "d36f52c7-adcb-40db-ae4a-a51670923e9d",
+      "name": "Update DB 2"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.github.com/repos/EgorikTomatoes/test-n8n/pulls/{{ $('On Comment GitHub Trigger').first().json.body.issue.number }}/reviews",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "githubApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/vnd.github+json"
+            },
+            {
+              "name": "X-GitHub-Api-Version",
+              "value": "2022-11-28"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ body: $('Ai review agent 2').first().json.output.body ?? $('Ai review agent 2').first().json.output.summary ?? '', event: 'COMMENT', comments: ($('Ai review agent 2').first().json.output.comments ?? []).map(c => ({ path: c.path, line: Number(c.line), side: 'RIGHT', body: c.body })) }) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2880,
+        2176
+      ],
+      "name": "Create Inline PR Review 2",
+      "id": "f4299859-4f27-4801-b377-7866c02c8667",
+      "credentials": {
+        "githubApi": {
+          "id": "agMSFSxIkBM5TyuW",
+          "name": "GitHub account 38"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"summary\": \"Краткое ревью на русском с приоритетами, предложениями\",\n  \"comments\": [\n    {\n      \"path\": \"src/file.cpp\",\n      \"line\": 15,\n      \"side\": \"RIGHT\",\n      \"body\": \"[medium] Объяснение конкретной проблемы и исправления\"\n    }\n  ],\n  \"verdict\": \"Только вердикт ревью Accept|Reject\",\n  \"commitTitle\": \"Названия коммита при мердже пулл реквеста\",\n  \"commitBody\": \"Описание коммита при мердже пулл реквеста\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        2352,
+        1600
+      ],
+      "id": "987fa037-b7e5-4bff-9b2b-4224903c4075",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"summary\": \"Краткое ревью на русском с приоритетами, предложениями\",\n  \"comments\": [\n    {\n      \"path\": \"src/file.cpp\",\n      \"line\": 15,\n      \"side\": \"RIGHT\",\n      \"body\": \"[medium] Объяснение конкретной проблемы и исправления\"\n    }\n  ],\n  \"verdict\": \"Только вердикт ревью Accept|Reject\",\n  \"commitTitle\": \"Названия коммита при мердже пулл реквеста\",\n  \"commitBody\": \"Описание коммита при мердже пулл реквеста\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        2352,
+        2096
+      ],
+      "id": "a2bdd8c6-a670-40fc-a95e-5d5b498b0e88",
+      "name": "Structured Output Parser1"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "go3egWS1I3kc864R",
+          "mode": "list",
+          "cachedResultName": "Webhooks",
+          "cachedResultUrl": "/projects/FCTo4lB2XkyLA9VV/datatables/go3egWS1I3kc864R"
+        }
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        3120,
+        2176
+      ],
+      "id": "fdc32728-e106-448c-ba96-99ae7efe1c0c",
+      "name": "Get Webhooks"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.activeWebhooks }}",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "verdict",
+              "value": "={{ $('Ai review agent 2').item.json.output.verdict }}"
+            },
+            {
+              "name": "commitTitle",
+              "value": "={{ $('Ai review agent 2').item.json.output.commitTitle }}"
+            },
+            {
+              "name": "commitBody",
+              "value": "={{ $('Ai review agent 2').item.json.output.commitBody }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        3344,
+        2176
+      ],
+      "id": "59e56e80-cc70-46fd-9d57-1a34b0f3595b",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "go3egWS1I3kc864R",
+          "mode": "list",
+          "cachedResultName": "Webhooks",
+          "cachedResultUrl": "/projects/FCTo4lB2XkyLA9VV/datatables/go3egWS1I3kc864R"
+        }
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        3168,
+        1184
+      ],
+      "id": "f71d1e91-401f-45bd-a3d6-906dae34263f",
+      "name": "Get Webhooks1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.activeWebhooks }}",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "verdict",
+              "value": "={{ $('Ai review agent 1').item.json.output.verdict }}"
+            },
+            {
+              "name": "commitTitle",
+              "value": "={{ $('Ai review agent 1').item.json.output.commitTitle }}"
+            },
+            {
+              "name": "commitBody",
+              "value": "={{ $('Ai review agent 1').item.json.output.commitBody }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        3392,
+        1184
+      ],
+      "id": "011c81d9-15d5-47cd-b8cf-87c3e4aded36",
+      "name": "HTTP Request1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Switch1": {
+      "main": [
+        [
+          {
+            "node": "Checking first command existing",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Checking second command existing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On Comment GitHub Trigger": {
+      "main": [
+        [
+          {
+            "node": "Switch1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Checking first command existing": {
+      "main": [
+        [
+          {
+            "node": "Get a pull request diff 1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Checking second command existing": {
+      "main": [
+        [
+          {
+            "node": "Get a pull request diff 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a pull request diff 1": {
+      "main": [
+        [
+          {
+            "node": "Ai review agent 1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a pull request diff 2": {
+      "main": [
+        [
+          {
+            "node": "Ai review agent 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GPT5 model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Ai review agent 1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "sonnet4.6 model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Ai review agent 2",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ai review agent 1": {
+      "main": [
+        [
+          {
+            "node": "Create Inline PR Review1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Add label 1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Update DB 1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ai review agent 2": {
+      "main": [
+        [
+          {
+            "node": "Create Inline PR Review 2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Update DB 2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Add label 1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add label 1": {
+      "main": [
+        []
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Ai review agent 1",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser1": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Ai review agent 2",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Webhooks": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Inline PR Review 2": {
+      "main": [
+        [
+          {
+            "node": "Get Webhooks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Webhooks1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Inline PR Review1": {
+      "main": [
+        [
+          {
+            "node": "Get Webhooks1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "8e5b51cf-135e-4bd4-b662-34710c85046e",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "68dbbb4e8fa686c3fd4e9982ade6836edb66976f207553e7ac22df961581c78c"
+  },
+  "nodeGroups": [],
+  "id": "l6ifxwa3OewgxBYg",
+  "tags": []
+}
