@@ -1,0 +1,603 @@
+{
+  "name": "Practice WorkFlow",
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "edit",
+        "owner": {
+          "__rl": true,
+          "value": "EgorikTomatoes",
+          "mode": "list",
+          "cachedResultName": "EgorikTomatoes",
+          "cachedResultUrl": "https://github.com/EgorikTomatoes"
+        },
+        "repository": {
+          "__rl": true,
+          "value": "test-n8n",
+          "mode": "list",
+          "cachedResultName": "test-n8n",
+          "cachedResultUrl": "https://github.com/EgorikTomatoes/test-n8n"
+        },
+        "issueNumber": "={{ $('Github Trigger').item.json.body.issue.number }}",
+        "editFields": {
+          "labels": [
+            {
+              "label": "={{ $json.output.type }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "position": [
+        592,
+        112
+      ],
+      "id": "a1ff7938-608c-4b9c-aa02-106c29895534",
+      "name": "Edit an issue",
+      "webhookId": "ac355be5-ec8f-4bfd-9b3e-f15227aeb1a6",
+      "credentials": {
+        "githubApi": {
+          "id": "agMSFSxIkBM5TyuW",
+          "name": "GitHub account 38"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "9ed10759-7cea-4249-bc92-98a51d43cee7",
+              "leftValue": "={{ $json.output.confidience }}",
+              "rightValue": 0.6,
+              "operator": {
+                "type": "number",
+                "operation": "lt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        288,
+        0
+      ],
+      "id": "511932d8-505f-4295-a01f-f9bde06e819b",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "operation": "edit",
+        "owner": {
+          "__rl": true,
+          "value": "EgorikTomatoes",
+          "mode": "list",
+          "cachedResultName": "EgorikTomatoes",
+          "cachedResultUrl": "https://github.com/EgorikTomatoes"
+        },
+        "repository": {
+          "__rl": true,
+          "value": "test-n8n",
+          "mode": "list",
+          "cachedResultName": "test-n8n",
+          "cachedResultUrl": "https://github.com/EgorikTomatoes/test-n8n"
+        },
+        "issueNumber": "={{ $('Github Trigger').item.json.body.issue.number }}",
+        "editFields": {
+          "labels": [
+            {
+              "label": "=need-triage"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "position": [
+        592,
+        -64
+      ],
+      "id": "b0cac56a-d4d7-4006-937a-ef55fbf3f3b3",
+      "name": "Edit an issue1",
+      "webhookId": "ac355be5-ec8f-4bfd-9b3e-f15227aeb1a6",
+      "credentials": {
+        "githubApi": {
+          "id": "agMSFSxIkBM5TyuW",
+          "name": "GitHub account 38"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "createComment",
+        "owner": {
+          "__rl": true,
+          "value": "EgorikTomatoes",
+          "mode": "list",
+          "cachedResultName": "EgorikTomatoes",
+          "cachedResultUrl": "https://github.com/EgorikTomatoes"
+        },
+        "repository": {
+          "__rl": true,
+          "value": "test-n8n",
+          "mode": "list",
+          "cachedResultName": "test-n8n",
+          "cachedResultUrl": "https://github.com/EgorikTomatoes/test-n8n"
+        },
+        "issueNumber": "={{ $('Github Trigger').item.json.body.issue.number }}",
+        "body": "=Привет @{{ $('Github Trigger').item.json.body.issue.user.login }}! Рады вашему Issue. Вот ссылка на [CONTRIBUTING.md](https://www.youtube.com/watch?v=dQw4w9WgXcQ&list=RDdQw4w9WgXcQ)"
+      },
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "position": [
+        1056,
+        16
+      ],
+      "id": "06666d09-95a9-4a21-9370-bbc933057611",
+      "name": "Create a comment on an issue",
+      "webhookId": "81e81002-2aec-4a7b-921b-406ef8434463",
+      "credentials": {
+        "githubApi": {
+          "id": "agMSFSxIkBM5TyuW",
+          "name": "GitHub account 38"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "XKwie8AYJQTEU5WS",
+          "mode": "list",
+          "cachedResultName": "My Sub-Workflow 1",
+          "cachedResultUrl": "/workflow/XKwie8AYJQTEU5WS"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "title": "={{ $('Github Trigger').item.json.body.issue.title }}",
+            "body": "={{ $('Github Trigger').item.json.body.issue.body }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "title",
+              "displayName": "title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "body",
+              "displayName": "body",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.4,
+      "position": [
+        -48,
+        0
+      ],
+      "id": "b25666b0-8d2a-4319-8cd4-861142a0e882",
+      "name": "Execute Workflow"
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "FEGOCmqLiGuw7UDA",
+          "mode": "list",
+          "cachedResultName": "processed_issues",
+          "cachedResultUrl": "/projects/FCTo4lB2XkyLA9VV/datatables/FEGOCmqLiGuw7UDA"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "issue_id": "={{ $('Github Trigger').item.json.body.issue.id }}",
+            "author": "={{ $('Github Trigger').item.json.body.issue.user.login }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "issue_id",
+              "displayName": "issue_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "author",
+              "displayName": "author",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        288,
+        208
+      ],
+      "id": "d56a77dd-3972-4322-bd3a-a2d911a7c000",
+      "name": "Insert row"
+    },
+    {
+      "parameters": {
+        "owner": {
+          "__rl": true,
+          "value": "EgorikTomatoes",
+          "mode": "list",
+          "cachedResultName": "EgorikTomatoes",
+          "cachedResultUrl": "https://github.com/EgorikTomatoes"
+        },
+        "repository": {
+          "__rl": true,
+          "value": "test-n8n",
+          "mode": "list",
+          "cachedResultName": "test-n8n",
+          "cachedResultUrl": "https://github.com/EgorikTomatoes/test-n8n"
+        },
+        "events": [
+          "issues"
+        ],
+        "options": {}
+      },
+      "type": "n8n-nodes-base.githubTrigger",
+      "typeVersion": 1,
+      "position": [
+        -896,
+        192
+      ],
+      "id": "6c9ad185-1e09-4442-a077-be8df35d6813",
+      "name": "Github Trigger",
+      "webhookId": "4869549c-23ca-4af6-a90b-8da057ab8cd2",
+      "credentials": {
+        "githubApi": {
+          "id": "agMSFSxIkBM5TyuW",
+          "name": "GitHub account 38"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "rowNotExists",
+        "dataTableId": {
+          "__rl": true,
+          "value": "FEGOCmqLiGuw7UDA",
+          "mode": "list",
+          "cachedResultName": "processed_issues",
+          "cachedResultUrl": "/projects/FCTo4lB2XkyLA9VV/datatables/FEGOCmqLiGuw7UDA"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "issue_id",
+              "keyValue": "={{ $json.body.issue.id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        -656,
+        192
+      ],
+      "id": "1673b13d-3414-449d-856f-e7304ecc69c8",
+      "name": "If row does not exist"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 4
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.body.action }}",
+                    "rightValue": "opened",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "2004e952-250e-408b-a31c-e819a1498c03"
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.5,
+      "position": [
+        -448,
+        192
+      ],
+      "id": "45b50993-f225-4133-a05c-e45078619a0d",
+      "name": "Switch1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=\thttps://api.github.com/repos/EgorikTomatoes/test-n8n/issues/{{ $('Github Trigger').first().json.body.issue.number }}/labels",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "githubApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"labels\": [\"First-time-contributing\"]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1280,
+        16
+      ],
+      "id": "3e18a8ee-4725-43cf-bfd5-7cc41f14c1b6",
+      "name": "HTTP Request",
+      "credentials": {
+        "githubApi": {
+          "id": "agMSFSxIkBM5TyuW",
+          "name": "GitHub account 38"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "rowNotExists",
+        "dataTableId": {
+          "__rl": true,
+          "value": "ArpQCTiy6rmKypEO",
+          "mode": "list",
+          "cachedResultName": "FirstContributing",
+          "cachedResultUrl": "/projects/FCTo4lB2XkyLA9VV/datatables/ArpQCTiy6rmKypEO"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "GitNickname",
+              "keyValue": "={{ $('Github Trigger').item.json.body.issue.user.login }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        816,
+        16
+      ],
+      "id": "5fb909e0-9aca-40f5-ae85-b0e03908bd5e",
+      "name": "Check User Existing"
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "ArpQCTiy6rmKypEO",
+          "mode": "list",
+          "cachedResultName": "FirstContributing",
+          "cachedResultUrl": "/projects/FCTo4lB2XkyLA9VV/datatables/ArpQCTiy6rmKypEO"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "GitNickname": "={{ $('Github Trigger').item.json.body.issue.user.login }}"
+          },
+          "matchingColumns": [
+            "GitNickname"
+          ],
+          "schema": [
+            {
+              "id": "GitNickname",
+              "displayName": "GitNickname",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1504,
+        16
+      ],
+      "id": "7bcfcecb-6628-4f69-80e5-ffaff8e1f0b2",
+      "name": "Insert User"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Edit an issue1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit an issue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Workflow": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Insert row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Github Trigger": {
+      "main": [
+        [
+          {
+            "node": "If row does not exist",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If row does not exist": {
+      "main": [
+        [
+          {
+            "node": "Switch1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch1": {
+      "main": [
+        [
+          {
+            "node": "Execute Workflow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a comment on an issue": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit an issue1": {
+      "main": [
+        [
+          {
+            "node": "Check User Existing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit an issue": {
+      "main": [
+        [
+          {
+            "node": "Check User Existing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Insert User",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check User Existing": {
+      "main": [
+        [
+          {
+            "node": "Create a comment on an issue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "dc303958-1cd3-44f9-95d4-2854737bd076",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "68dbbb4e8fa686c3fd4e9982ade6836edb66976f207553e7ac22df961581c78c"
+  },
+  "nodeGroups": [],
+  "id": "3ekGVMDgPEHE7DNH",
+  "tags": []
+}

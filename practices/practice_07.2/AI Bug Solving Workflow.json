@@ -1,0 +1,1281 @@
+{
+  "name": "AI Bug Solving Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "owner": {
+          "__rl": true,
+          "value": "EgorikTomatoes",
+          "mode": "list",
+          "cachedResultName": "EgorikTomatoes",
+          "cachedResultUrl": "https://github.com/EgorikTomatoes"
+        },
+        "repository": {
+          "__rl": true,
+          "value": "test-n8n",
+          "mode": "name"
+        },
+        "events": [
+          "issues"
+        ],
+        "options": {}
+      },
+      "type": "n8n-nodes-base.githubTrigger",
+      "typeVersion": 1,
+      "position": [
+        -640,
+        -64
+      ],
+      "id": "276d0b53-71a0-4dbc-a23b-e94b3c208c8e",
+      "name": "Github Trigger",
+      "webhookId": "023886ff-6dac-4ecd-939c-09be0d352885",
+      "credentials": {
+        "githubApi": {
+          "id": "agMSFSxIkBM5TyuW",
+          "name": "GitHub account 38"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 4
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.body.action }}",
+                    "rightValue": "labeled",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "be11a9c1-a56a-4698-a66d-6e371879e668"
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.5,
+      "position": [
+        -336,
+        -64
+      ],
+      "id": "092fcaf7-73c9-4fcc-ad4b-608327250171",
+      "name": "Is Type Labeled"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 4
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.body.label.name }}",
+                    "rightValue": "=bug",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "bde373c3-6740-4856-9e02-3f71c92d7c49"
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.5,
+      "position": [
+        -112,
+        -64
+      ],
+      "id": "e0d44d3e-6708-4bf0-992a-ee8e80aadd28",
+      "name": "Is Bug"
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "operation": "get",
+        "owner": {
+          "__rl": true,
+          "value": "EgorikTomatoes",
+          "mode": "list",
+          "cachedResultName": "EgorikTomatoes",
+          "cachedResultUrl": "https://github.com/EgorikTomatoes"
+        },
+        "repository": {
+          "__rl": true,
+          "value": "test-n8n",
+          "mode": "list",
+          "cachedResultName": "test-n8n",
+          "cachedResultUrl": "https://github.com/EgorikTomatoes/test-n8n"
+        },
+        "filePath": "={{ $json.path }}",
+        "additionalParameters": {}
+      },
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "position": [
+        848,
+        -64
+      ],
+      "id": "6d0defc9-eb13-4501-b269-47403149d3ec",
+      "name": "Get a file",
+      "webhookId": "f10c0c2c-c2ee-4747-af05-a17d768bb2ec",
+      "credentials": {
+        "githubApi": {
+          "id": "agMSFSxIkBM5TyuW",
+          "name": "GitHub account 38"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nconst fileRefs = items.flatMap(item => item.json.url ?? []);\n\nreturn [\n  {\n    json: {\n      fileRefs\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1104,
+        -64
+      ],
+      "id": "3435b646-4602-43d7-942f-64590db7236a",
+      "name": "GetFileLinks"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Ты — опытный Senior Software Engineer, специализирующийся на поиске и исправлении ошибок в программном коде.\n\nТвоя задача — автоматически проанализировать GitHub Issue, найти причину описанной ошибки в исходном коде проекта и подготовить минимальное, корректное и безопасное исправление.\n\n## Входные данные\n\n### GitHub Issue\n\nНазвание issue: {{ $json.title }}\n\nТекст issue: {{ $json.body }}\n\nНомер issue: {{ $('Github Trigger').item.json.body.issue.number }}\n\n### Ссылки на исходный код проекта\n\n{{ $('GetFileLinks').item.json.fileRefs }}\n\n\n## Алгоритм работы\n\n### 1. Анализ Issue\n\n- Изучи заголовок и описание ошибки.\n- Определи ожидаемое и фактическое поведение программы.\n- Выдели шаги воспроизведения, если они указаны.\n- Определи, какие части приложения могут быть связаны с ошибкой.\n- Если информации недостаточно, не придумывай детали.\n\n### 2. Анализ исходного кода\n\n- Изучи предоставленные ссылки файлы проекта.\n- Получи данные файлов по ссылкам.\n- Найди функции, классы и участки кода, которые могут вызывать описанную ошибку.\n- Проанализируй зависимости между файлами.\n- Определи наиболее вероятную первопричину проблемы.\n- Не изменяй код, который не относится к исправлению.\n\n### 3. Генерация исправления\n\nЕсли причина ошибки установлена с достаточной уверенностью:\n\n- Подготовь минимальное исправление.\n- Сохрани существующую архитектуру проекта.\n- Не изменяй публичные интерфейсы без необходимости.\n- Соблюдай стиль и соглашения исходного кода.\n- Не удаляй существующую функциональность.\n- Не добавляй ненужные зависимости.\n- По возможности добавь или измени тест, проверяющий исправляемую ошибку.\n- Верни полный новый текст каждого изменяемого файла.\n- Не используй заглушки, многоточия или сокращения содержимого файлов.\n\n### 4. Проверка исправления\n\nПроанализируй предлагаемое решение:\n\n- Устраняет ли оно первопричину бага?\n- Не нарушает ли существующую функциональность?\n- Обрабатывает ли пограничные случаи?\n- Не создаёт ли очевидных уязвимостей?\n- Соответствует ли синтаксису языка программирования?\n\nНе утверждай, что тесты выполнены, если у тебя нет результатов реального запуска.\n\n### 5. Когда нельзя исправлять автоматически\n\nУстанови status = \"needs_review\", если:\n\n- Недостаточно информации для определения причины ошибки.\n- Не предоставлены ссылки на исходный код.\n- Исправление требует изменения критически важной архитектуры.\n- Есть высокий риск нарушения существующей функциональности.\n- Для исправления необходимы секретные ключи, доступ к production или внешним системам.\n- Невозможно обоснованно выбрать безопасное решение.\n\nВ таком случае не генерируй неподтверждённые изменения файлов, а объясни проблему и укажи, какая информация необходима.\n\n## Формат ответа\n\nВерни исключительно валидный JSON следующей структуры:\n\n{\n  \"status\": \"fixed\",\n  \"confidence\": 0.95,\n  \"issue_number\": 9,\n  \"summary\": \"Краткое описание исправления\",\n  \"root_cause\": \"Причина возникновения ошибки\",\n  \"explanation\": \"Каким образом исправление решает проблему\",\n  \"branch_name\": \"ai-fix-issue-9\",\n  \"commit_message\": \"fix: resolve issue #9\",\n  \"files\": [\n    {\n      \"path\": \"src/example.js\",\n      \"content\": \"ПОЛНЫЙ ИСПРАВЛЕННЫЙ КОД ФАЙЛА\",\n      \"change_description\": \"Описание изменений\"\n    }\n  ],\n  \"tests\": [\n    {\n      \"description\": \"Проверка исправленной функциональности\",\n      \"command\": \"npm test\",\n      \"executed\": false\n    }\n  ],\n  \"risks\": [],\n  \"review_required\": false\n}\n\n## Требования к JSON\n\n1. status может быть только \"fixed\" или \"needs_review\".\n2. confidence — число от 0 до 1.\n3. issue_number — номер исходного GitHub Issue.\n4. branch_name — название новой ветки для исправления.\n5. files — массив изменённых файлов.\n6. Каждый элемент files должен содержать относительный путь, полный исправленный код и описание изменения.\n7. Если status = \"needs_review\", files должен быть пустым массивом, а review_required = true.\n8. Если status = \"fixed\", массив files не должен быть пустым.\n9. Не добавляй Markdown, комментарии до JSON или пояснения после JSON.\n10. Строки внутри JSON должны быть корректно экранированы.\n11. Не добавляй поля, которые не предусмотрены схемой.\n12. Не изменяй файлы конфигурации безопасности, CI/CD, секреты или права доступа без отдельного разрешения.\n13. Не включай в ответ секреты, токены и конфиденциальные данные.\n\n## Главная цель\n\nПредоставить корректное исправление, которое n8n сможет автоматически записать в отдельную GitHub-ветку и использовать для создания Pull Request.\n\nПриоритет — корректность и безопасность, а не обязательное создание исправления любой ценой.",
+        "hasOutputParser": true,
+        "options": {
+          "maxIterations": 100
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1776,
+        -64
+      ],
+      "id": "1083cc43-0ac0-440b-80f9-755d7be90210",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "openai/gpt-5.6-luna",
+          "mode": "list",
+          "cachedResultName": "openai/gpt-5.6-luna"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        1680,
+        160
+      ],
+      "id": "887b19f9-823c-4f0b-a061-65820f70b4c0",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "olK7PaVmAnnlpgun",
+          "name": "OpenAI account 27"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "owner": {
+          "__rl": true,
+          "value": "EgorikTomatoes",
+          "mode": "list",
+          "cachedResultName": "EgorikTomatoes",
+          "cachedResultUrl": "https://github.com/EgorikTomatoes"
+        },
+        "repository": {
+          "__rl": true,
+          "value": "test-n8n",
+          "mode": "list",
+          "cachedResultName": "test-n8n",
+          "cachedResultUrl": "https://github.com/EgorikTomatoes/test-n8n"
+        },
+        "issueNumber": "={{ $('Github Trigger').item.json.body.issue.number }}"
+      },
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "position": [
+        1328,
+        -64
+      ],
+      "id": "3619b5b1-71c7-4976-b590-0d2dfb53d732",
+      "name": "Get an issue",
+      "webhookId": "86fe5649-fecc-4cdf-8fc7-2bdc0c26410f",
+      "credentials": {
+        "githubApi": {
+          "id": "agMSFSxIkBM5TyuW",
+          "name": "GitHub account 38"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "githubApi",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1552,
+        -64
+      ],
+      "id": "81c86688-d8c2-4fc8-8c89-6dbbfa38b45a",
+      "name": "Get Issue text",
+      "credentials": {
+        "githubApi": {
+          "id": "agMSFSxIkBM5TyuW",
+          "name": "GitHub account 38"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n\"status\": \"fixed\",\n\"confidence\": 0.95,\n\"issue_number\": 9,\n\"summary\": \"Краткое описание исправления\",\n\"root_cause\": \"Причина возникновения ошибки\",\n\"explanation\": \"Каким образом исправление решает проблему\",\n\"branch_name\": \"ai-fix-issue-9\",\n\"commit_message\": \"fix: resolve issue #9\",\n\"files\": [\n{\n\"path\": \"src/example.js\",\n\"content\": \"ПОЛНЫЙ ИСПРАВЛЕННЫЙ КОД ФАЙЛА\",\n\"change_description\": \"Описание изменений\"\n}\n],\n\"tests\": [\n{\n\"description\": \"Проверка исправленной функциональности\",\n\"command\": \"npm test\",\n\"executed\": false\n}\n],\n\"risks\": [],\n\"review_required\": false\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1920,
+        176
+      ],
+      "id": "5f035445-0ba6-410c-a07c-45023b654804",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 4
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.output.status }}",
+                    "rightValue": "fixed",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "aa83542b-260d-40a6-98ec-32fb328bd31f"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 4
+                },
+                "conditions": [
+                  {
+                    "id": "aa521adb-7e76-4e18-9ca2-9c1d0bb66b15",
+                    "leftValue": "={{ $json.output.status }}",
+                    "rightValue": "needs_review",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.5,
+      "position": [
+        2128,
+        -64
+      ],
+      "id": "c61ba8ff-45de-4bbd-a50c-8deabe8e0c70",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "operation": "createComment",
+        "owner": {
+          "__rl": true,
+          "value": "EgorikTomatoes",
+          "mode": "list",
+          "cachedResultName": "EgorikTomatoes",
+          "cachedResultUrl": "https://github.com/EgorikTomatoes"
+        },
+        "repository": {
+          "__rl": true,
+          "value": "test-n8n",
+          "mode": "list",
+          "cachedResultName": "test-n8n",
+          "cachedResultUrl": "https://github.com/EgorikTomatoes/test-n8n"
+        },
+        "issueNumber": "={{ $('Github Trigger').item.json.body.issue.number }}",
+        "body": "=\n{{ `## 🤖 AI Code Analysis — Needs Review\n\nАвтоматическое исправление пока невозможно.\n\n**Причина:**\n${$json.output.root_cause}\n\n**Объяснение:**\n${$json.output.explanation}\n\n**Возможные риски:**\n${($json.output.risks ?? []).map(r => `- ${r}`).join('\\n') || 'Не указаны'}\n\n**Уверенность AI:** ${Math.round($json.output.confidence * 100)}%\n\nПожалуйста, уточните описание ошибки, чтобы можно было повторить анализ.\n\n---\n*🤖 Автоматический комментарий AI Agent*` }}\n"
+      },
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "position": [
+        2352,
+        32
+      ],
+      "id": "caf6b8a3-b147-4b01-9501-aee010cf201b",
+      "name": "Create a comment on an issue",
+      "webhookId": "260e38d9-3c99-4b37-bf86-7b58e47c7adc",
+      "credentials": {
+        "githubApi": {
+          "id": "agMSFSxIkBM5TyuW",
+          "name": "GitHub account 38"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "operation": "edit",
+        "owner": {
+          "__rl": true,
+          "value": "EgorikTomatoes",
+          "mode": "list",
+          "cachedResultName": "EgorikTomatoes",
+          "cachedResultUrl": "https://github.com/EgorikTomatoes"
+        },
+        "repository": {
+          "__rl": true,
+          "value": "test-n8n",
+          "mode": "list",
+          "cachedResultName": "test-n8n",
+          "cachedResultUrl": "https://github.com/EgorikTomatoes/test-n8n"
+        },
+        "filePath": "={{ $json.path }}",
+        "fileContent": "={{ $json.fileData }}",
+        "commitMessage": "={{ $json.commitDescription }}",
+        "additionalParameters": {
+          "branch": {
+            "branch": "={{ $('AI Agent').item.json.output.branch_name }}"
+          }
+        }
+      },
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "position": [
+        3024,
+        -160
+      ],
+      "id": "72187a69-0a1a-4e91-ba3c-ee53c36c1aa6",
+      "name": "Edit a file",
+      "webhookId": "1e492ba2-b9c5-47ea-92cc-ae8a160b56ea",
+      "credentials": {
+        "githubApi": {
+          "id": "agMSFSxIkBM5TyuW",
+          "name": "GitHub account 38"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nfor (const item of $('Switch').first().json.output.files) {\n  return {\n    path: item.path,\n    fileData: item.content,\n    commitDescription: item.change_description\n  }\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2800,
+        -160
+      ],
+      "id": "36d8bc6e-f1c2-43a6-8cc2-1cbfc5a40ac0",
+      "name": "Parse file changes"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.github.com/repos/EgorikTomatoes/test-n8n/git/refs",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "githubApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  ref: \"refs/heads/\" + $('AI Agent').item.json.output.branch_name,\n  sha: $('Get SHA').item.json.object.sha\n}) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        2576,
+        -160
+      ],
+      "id": "e1ec15d2-57b3-4faf-b717-fce90c269c38",
+      "name": "Create Branch",
+      "credentials": {
+        "githubApi": {
+          "id": "agMSFSxIkBM5TyuW",
+          "name": "GitHub account 38"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://api.github.com/repos/EgorikTomatoes/test-n8n/git/ref/heads/main",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "githubApi",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        2352,
+        -160
+      ],
+      "id": "a7957c74-10ce-4294-a0a1-be23e73a46d0",
+      "name": "Get SHA",
+      "credentials": {
+        "githubApi": {
+          "id": "agMSFSxIkBM5TyuW",
+          "name": "GitHub account 38"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "pullRequest",
+        "base": "={{ $('Get SHA').item.json.ref }}",
+        "head": "={{ $('AI Agent').item.json.output.branch_name }}",
+        "title": "={{ $('AI Agent').item.json.output.commit_message }}",
+        "body": "=\n## 🤖 AI-Generated Bug Fix\n\n### 📋 Описание\nАвтоматическое исправление ошибки из Issue #{{ $('Github Trigger').item.json.body.issue.number }}.\n\n\n### 🔍 Причина ошибки\n{{ $('AI Agent').item.json.output.root_cause }}\n\n### 🛠 Внесённые изменения\n{{ $('AI Agent').item.json.output.explanation }}\n\n**Изменённые файлы:**\n\n{{ ($('AI Agent').item.json.output.files ?? []).map(f => '- `' + f.path + '` — ' + f.change_description).join('\\n') }}\n\n### 🧪 Тестирование\n\n{{ ($('AI Agent').item.json.output.tests ?? []).map(t => '- [' + (t.executed ? 'x' : ' ') + '] ' + t.description).join('\\n') || '- [ ] Тесты ещё не выполнялись' }}\n\n### ⚠️ Возможные риски\n\n{{ ($('AI Agent').item.json.output.risks ?? []).map(r => '- ' + r).join('\\n') || 'Явные риски не указаны.' }}\n\n### 🤖 AI Analysis\n\n**Уверенность модели:** {{ Math.round($('AI Agent').item.json.output.confidence * 100) }}%\n\n---\n\n*Pull Request автоматически создан через n8n.*\n",
+        "owner": {
+          "__rl": true,
+          "value": "EgorikTomatoes",
+          "mode": "list",
+          "cachedResultName": "EgorikTomatoes",
+          "cachedResultUrl": "https://github.com/EgorikTomatoes"
+        },
+        "repository": {
+          "__rl": true,
+          "value": "test-n8n",
+          "mode": "list",
+          "cachedResultName": "test-n8n",
+          "cachedResultUrl": "https://github.com/EgorikTomatoes/test-n8n"
+        }
+      },
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "position": [
+        3248,
+        -160
+      ],
+      "id": "ad35ece7-5873-4c84-a0ef-cb04cc46992b",
+      "name": "Create a pull request",
+      "webhookId": "c699cac8-d10d-45b0-a2d9-c3e15ca14548",
+      "credentials": {
+        "githubApi": {
+          "id": "agMSFSxIkBM5TyuW",
+          "name": "GitHub account 38"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "pullRequest",
+        "operation": "createComment",
+        "pullRequestNumber": "={{ $json.number }}",
+        "body": "/make_ai_review",
+        "owner": {
+          "__rl": true,
+          "value": "EgorikTomatoes",
+          "mode": "list",
+          "cachedResultName": "EgorikTomatoes",
+          "cachedResultUrl": "https://github.com/EgorikTomatoes"
+        },
+        "repository": {
+          "__rl": true,
+          "value": "test-n8n",
+          "mode": "list",
+          "cachedResultName": "test-n8n",
+          "cachedResultUrl": "https://github.com/EgorikTomatoes/test-n8n"
+        }
+      },
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "position": [
+        3472,
+        -160
+      ],
+      "id": "74e9f2fc-afa1-45c5-8dd1-d94c1c3852d9",
+      "name": "Create a comment on a pull request",
+      "webhookId": "1de4f6fc-2c08-4059-a4b0-49d447f04adf",
+      "credentials": {
+        "githubApi": {
+          "id": "agMSFSxIkBM5TyuW",
+          "name": "GitHub account 38"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resume": "webhook",
+        "httpMethod": "POST",
+        "responseMode": "lastNode",
+        "limitWaitTime": true,
+        "resumeAmount": 15,
+        "resumeUnit": "minutes",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        3952,
+        -160
+      ],
+      "id": "c0f4c361-b1e9-4b10-bec6-48ce5ec62da6",
+      "name": "Wait",
+      "webhookId": "8069692c-d25c-4c66-bbe5-10bf2ab68296"
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "go3egWS1I3kc864R",
+          "mode": "list",
+          "cachedResultName": "Webhooks",
+          "cachedResultUrl": "/projects/FCTo4lB2XkyLA9VV/datatables/go3egWS1I3kc864R"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "activeWebhooks": "={{ $execution.resumeUrl }}"
+          },
+          "matchingColumns": [
+            "activeWebhooks"
+          ],
+          "schema": [
+            {
+              "id": "activeWebhooks",
+              "displayName": "activeWebhooks",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        3744,
+        -160
+      ],
+      "id": "6ce169e8-4caa-4bae-a526-5d848a445ba7",
+      "name": "Insert row"
+    },
+    {
+      "parameters": {
+        "operation": "deleteRows",
+        "dataTableId": {
+          "__rl": true,
+          "value": "go3egWS1I3kc864R",
+          "mode": "list",
+          "cachedResultName": "Webhooks",
+          "cachedResultUrl": "/projects/FCTo4lB2XkyLA9VV/datatables/go3egWS1I3kc864R"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "activeWebhooks",
+              "keyValue": "={{ $('Insert row').item.json.activeWebhooks }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        4160,
+        16
+      ],
+      "id": "407456aa-c9d9-4e72-981e-c37b6892d8ab",
+      "name": "Delete row(s)"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 4
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.body.verdict }}",
+                    "rightValue": "Accept",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "bf9bd886-43d0-46c9-8020-8aca4e149e1d"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 4
+                },
+                "conditions": [
+                  {
+                    "id": "91d8e9c8-41a8-4b0a-b16b-719ef1ab2b22",
+                    "leftValue": "={{ $json.body.verdict }}",
+                    "rightValue": "Reject",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.5,
+      "position": [
+        4160,
+        -320
+      ],
+      "id": "2058554c-82fd-4d4c-a860-35e59c0fbf03",
+      "name": "Switch1"
+    },
+    {
+      "parameters": {
+        "operation": "createComment",
+        "owner": {
+          "__rl": true,
+          "value": "EgorikTomatoes",
+          "mode": "list",
+          "cachedResultName": "EgorikTomatoes",
+          "cachedResultUrl": "https://github.com/EgorikTomatoes"
+        },
+        "repository": {
+          "__rl": true,
+          "value": "test-n8n",
+          "mode": "list",
+          "cachedResultName": "test-n8n",
+          "cachedResultUrl": "https://github.com/EgorikTomatoes/test-n8n"
+        },
+        "issueNumber": "={{ $('Github Trigger').item.json.body.issue.number }}",
+        "body": "=\n## ❌ AI Code Review — Исправление отклонено\n\nАвтоматически сгенерированное исправление не прошло проверку AI Code Review.\n\n### 🔍 Результат проверки\n**Статус:** `REJECT`\n\n### 📋 Дальнейшие действия\n- Автоматический merge заблокирован.\n- Pull Request требует доработки.\n- После исправления замечаний необходимо повторное AI Code Review.\n\n**Статус Issue:** Ожидает исправления.\n\n---\n\n*🤖 Комментарий автоматически создан через n8n.*\n"
+      },
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "position": [
+        4400,
+        -208
+      ],
+      "id": "1f72c726-2c43-4c1a-9d52-fcb8cc83513e",
+      "name": "Create a comment on an issue1",
+      "webhookId": "801de9b7-e536-44ac-831f-9ab7149e2337",
+      "credentials": {
+        "githubApi": {
+          "id": "agMSFSxIkBM5TyuW",
+          "name": "GitHub account 38"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "createComment",
+        "owner": {
+          "__rl": true,
+          "value": "EgorikTomatoes",
+          "mode": "list",
+          "cachedResultName": "EgorikTomatoes",
+          "cachedResultUrl": "https://github.com/EgorikTomatoes"
+        },
+        "repository": {
+          "__rl": true,
+          "value": "test-n8n",
+          "mode": "list",
+          "cachedResultName": "test-n8n",
+          "cachedResultUrl": "https://github.com/EgorikTomatoes/test-n8n"
+        },
+        "issueNumber": "={{ $('Github Trigger').item.json.body.issue.number }}",
+        "body": "=## ✅ AI Code Review — Исправление одобрено\n\nАвтоматически сгенерированное исправление успешно прошло проверку AI Code Review!\n\n### 🔍 Результат проверки\n**Статус:** `ACCEPT`\n\nКритических замечаний к предложенным изменениям не обнаружено. AI подтвердил, что исправление соответствует поставленной задаче.\n\n### 🚀 Дальнейшие действия\n- ✅ AI Code Review завершено успешно.\n- ✅ Исправление одобрено для дальнейшего процесса слияния.\n- 🔄 Pull Request будет автоматически замерджен в основную ветку.\n\n### 📋 Статус Issue\nИсправление подготовлено и одобрено AI. После успешного merge Issue может будет закрыт.\n\n---\n\n*🤖 Проверка автоматически выполнена AI Code Review через n8n.*"
+      },
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "position": [
+        4384,
+        -432
+      ],
+      "id": "38a02dc5-5e78-4040-89c3-d42350006f9d",
+      "name": "Create a comment on an issue2",
+      "webhookId": "801de9b7-e536-44ac-831f-9ab7149e2337",
+      "credentials": {
+        "githubApi": {
+          "id": "agMSFSxIkBM5TyuW",
+          "name": "GitHub account 38"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "pullRequest",
+        "operation": "merge",
+        "pullRequestNumber": "={{ $('Create a pull request').item.json.number }}",
+        "commitTitle": "={{ $('Wait').item.json.body.commitTitle }}",
+        "commitMessage": "={{ $('Wait').item.json.body.commitBody }}",
+        "owner": {
+          "__rl": true,
+          "value": "EgorikTomatoes",
+          "mode": "list",
+          "cachedResultName": "EgorikTomatoes",
+          "cachedResultUrl": "https://github.com/EgorikTomatoes"
+        },
+        "repository": {
+          "__rl": true,
+          "value": "test-n8n",
+          "mode": "list",
+          "cachedResultName": "test-n8n",
+          "cachedResultUrl": "https://github.com/EgorikTomatoes/test-n8n"
+        }
+      },
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "position": [
+        4608,
+        -432
+      ],
+      "id": "8a481b89-bf15-4be4-9d46-46fc14d8bbf8",
+      "name": "Merge a pull request",
+      "webhookId": "bc6f2c42-ba55-45b1-b244-75443d5eafd8",
+      "credentials": {
+        "githubApi": {
+          "id": "agMSFSxIkBM5TyuW",
+          "name": "GitHub account 38"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "edit",
+        "owner": {
+          "__rl": true,
+          "value": "EgorikTomatoes",
+          "mode": "list",
+          "cachedResultName": "EgorikTomatoes",
+          "cachedResultUrl": "https://github.com/EgorikTomatoes"
+        },
+        "repository": {
+          "__rl": true,
+          "mode": "name",
+          "value": "test-n8n"
+        },
+        "issueNumber": "={{ $('Github Trigger').item.json.body.issue.number }}",
+        "editFields": {
+          "state": "closed",
+          "state_reason": "completed"
+        }
+      },
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "position": [
+        4832,
+        -432
+      ],
+      "id": "1fb017e0-6c47-4df7-8bc8-9cc514d76676",
+      "name": "Edit an issue",
+      "webhookId": "43d2debc-7fdf-4827-95e8-48c914efad14",
+      "credentials": {
+        "githubApi": {
+          "id": "agMSFSxIkBM5TyuW",
+          "name": "GitHub account 38"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('URL', ``, 'string') }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "githubApi",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.5,
+      "position": [
+        1840,
+        320
+      ],
+      "id": "cf9c5d3b-c387-4354-96ef-51b631881f91",
+      "name": "HTTP Request",
+      "credentials": {
+        "githubApi": {
+          "id": "agMSFSxIkBM5TyuW",
+          "name": "GitHub account 38"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "b04f2c9d-7388-4b50-bc6c-bdd5485e34ec",
+              "leftValue": "={{ $json.type }}",
+              "rightValue": "blob",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.4,
+      "position": [
+        624,
+        -64
+      ],
+      "id": "5e6b18d5-9889-4d9a-8e0a-54406a7d9e43",
+      "name": "Filter"
+    },
+    {
+      "parameters": {
+        "url": "https://api.github.com/repos/EgorikTomatoes/test-n8n/git/trees/main",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "githubApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "recursive",
+              "value": "1"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        128,
+        -64
+      ],
+      "id": "9d7332e3-f1c0-4ac1-a34e-ad623a00ea8d",
+      "name": "HTTP Request1",
+      "credentials": {
+        "githubApi": {
+          "id": "agMSFSxIkBM5TyuW",
+          "name": "GitHub account 38"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.first().json.tree.map(item => ({\n    json: item\n  }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        384,
+        -64
+      ],
+      "id": "51992a93-370a-4b68-b43a-475dabacb480",
+      "name": "Code in JavaScript"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Github Trigger": {
+      "main": [
+        [
+          {
+            "node": "Is Type Labeled",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Type Labeled": {
+      "main": [
+        [
+          {
+            "node": "Is Bug",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Bug": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a file": {
+      "main": [
+        [
+          {
+            "node": "GetFileLinks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GetFileLinks": {
+      "main": [
+        [
+          {
+            "node": "Get an issue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get an issue": {
+      "main": [
+        [
+          {
+            "node": "Get Issue text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Issue text": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Get SHA",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create a comment on an issue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit a file": {
+      "main": [
+        [
+          {
+            "node": "Create a pull request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse file changes": {
+      "main": [
+        [
+          {
+            "node": "Edit a file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Branch": {
+      "main": [
+        [
+          {
+            "node": "Parse file changes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get SHA": {
+      "main": [
+        [
+          {
+            "node": "Create Branch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a pull request": {
+      "main": [
+        [
+          {
+            "node": "Create a comment on a pull request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a comment on a pull request": {
+      "main": [
+        [
+          {
+            "node": "Insert row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Delete row(s)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Switch1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert row": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch1": {
+      "main": [
+        [
+          {
+            "node": "Create a comment on an issue2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create a comment on an issue1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a comment on an issue2": {
+      "main": [
+        [
+          {
+            "node": "Merge a pull request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge a pull request": {
+      "main": [
+        [
+          {
+            "node": "Edit an issue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter": {
+      "main": [
+        [
+          {
+            "node": "Get a file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "5769e7ae-1277-4a65-ac7c-7389db565c62",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "68dbbb4e8fa686c3fd4e9982ade6836edb66976f207553e7ac22df961581c78c"
+  },
+  "nodeGroups": [],
+  "id": "8QnUhkKhSVFmVHyx",
+  "tags": []
+}
