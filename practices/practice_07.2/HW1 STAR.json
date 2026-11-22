@@ -1,0 +1,562 @@
+{
+  "name": "HW1 STAR",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 9 * * MON"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -624,
+        48
+      ],
+      "id": "149cd705-744f-4c24-b983-b2c7db72445e",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "url": "https://api.github.com/search/issues",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "q",
+              "value": "=repo:EgorikTomatoes/test-n8n is:issue created:>={{ $json.previousDate.slice(0,10) }} created:<={{ $json.currentDate.slice(0,10) }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        128,
+        -256
+      ],
+      "id": "e94a56c3-cb6b-4f64-9f87-f94f72238668",
+      "name": "Opened Issues"
+    },
+    {
+      "parameters": {
+        "url": "https://api.github.com/search/issues",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "q",
+              "value": "=repo:EgorikTomatoes/test-n8n is:issue closed:>={{ $json.previousDate.slice(0,10) }} created:<={{ $json.currentDate.slice(0,10) }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        128,
+        -64
+      ],
+      "id": "25299e9a-a097-44aa-b5e4-140dd90d4701",
+      "name": "Closed Isssues"
+    },
+    {
+      "parameters": {
+        "url": "https://api.github.com/repos/EgorikTomatoes/test-n8n/issues/events",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        128,
+        144
+      ],
+      "id": "37220d62-d963-4f47-ae2a-308efd689801",
+      "name": "Reopened Issues"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\n\nconst issues = data.items ?? [];\n\nreturn {data : issues.map(issue => ({\n  json: {\n    event: \"opened\",\n    number: issue.number,\n    title: issue.title,\n    body: issue.body,\n    state: issue.state,\n    url: issue.html_url,\n    author: issue.user?.login,\n    tags: issue.labels.map(x => ({\n      name: x.name\n    }))\n  }\n}))};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        352,
+        -256
+      ],
+      "id": "81d873cc-6ada-4c67-bd86-8379f18bce28",
+      "name": "JSONProcessing 1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\n\nconst issues = data.items ?? [];\n\nreturn {data: issues.map(issue => ({\n  json: {\n    event: \"closed\",\n    number: issue.number,\n    title: issue.title,\n    body: issue.body,\n    state: issue.state,\n    url: issue.html_url,\n    author: issue.user?.login,\n    tags: issue.labels.map(x => ({\n      name: x.name\n    }))\n  }\n}))};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        352,
+        -64
+      ],
+      "id": "74ebd84d-b28d-4607-b3c8-84d70d75da33",
+      "name": "JSONProcessing 2"
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst items = $input.all();\n\nconst dates = $('Previous Date').first().json;\n\nconst startDate = new Date(dates.previousDate);\nconst endDate = new Date(dates.currentDate);\n\nconst issues = items\n  .filter(item => {\n    const event = item.json;\n\n    const eventDate = new Date(event.created_at);\n\n    return (\n      event.event === 'reopened' &&\n      eventDate >= startDate &&\n      eventDate <= endDate\n    );\n  })\n  .map(item => {\n    const issue = item.json.issue;\n\n    return {\n      event: \"reopened\",\n      number: issue.number,\n      title: issue.title,\n      body: issue.body,\n      state: issue.state,\n      url: issue.html_url,\n      author: issue.user?.login,\n      date: item.json.created_at,\n      tags: (issue.labels ?? []).map(x => ({\n        name: x.name\n      }))\n    };\n  });\n\nreturn [\n  {\n    json: {\n      data: issues\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        352,
+        144
+      ],
+      "id": "467edef3-5878-4a9f-9018-c3effc61c635",
+      "name": "JSONProcessing 3"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Ты — профессиональный аналитик GitHub-репозитория.\n\nТвоя задача — проанализировать GitHub Issues за отчётную неделю, сравнить статистику с предыдущей неделей и подготовить подробный HTML-отчёт для отправки через Gmail.\n\n## Входные данные\n\n### 1. Новые Issues (opened)\n\n### 2. Закрытые Issues (closed)\n\n### 3. Повторно открытые Issues (reopened)\n\nМассив JSON со всеми тремя данными {{ JSON.stringify($json.data) }}\n\n### 4. Статистика предыдущей недели (из Data Table)\n{{ JSON.stringify($json.previousDiff) }}\n\n\n## Задачи анализа\n\n### 1. Общая статистика\n- Подсчитай количество новых Issues (opened).\n- Подсчитай количество закрытых Issues (closed).\n- Подсчитай количество повторно открытых Issues (reopened).\n- Рассчитай разницу между количеством созданных и закрытых Issues.\n- Покажи количество уникальных Issues в каждой категории.\n- Не путай количество событий и количество уникальных Issues.\n\n### 2. Анализ типов Issues\n- Определи количество новых Issues с лейблами `bug`, `task`, `feature-request`, `needs-triage`.\n- Рассчитай процент каждого типа от общего количества новых Issues.\n- Определи наиболее распространённую категорию.\n- Если Issue содержит несколько лейблов, учитывай это и не выдавай сумму категорий за количество уникальных обращений.\n\n### 3. Анализ авторов\n- Сгруппируй новые Issues по авторам.\n- Подсчитай количество обращений каждого автора.\n- Определи топ-5 самых активных авторов.\n- Укажи количество созданных ими Issues.\n\n### 4. Анализ закрытых и повторно открытых Issues\n- Определи, сколько Issues было закрыто.\n- Перечисли наиболее значимые закрытые обращения.\n- Проанализируй повторно открытые Issues.\n- Обрати внимание на повторные открытия багов.\n- Выдели потенциально проблемные обращения.\n- Не утверждай, что ошибка исправлена, если это не подтверждается данными.\n\n### 5. Сравнение с предыдущей неделей\nЕсли статистика предыдущей недели доступна:\n- Сравни opened, closed и reopened.\n- Покажи абсолютное изменение каждого показателя.\n- Покажи процентное изменение.\n- Сравни распределение Issues по типам.\n- Сравни активность авторов.\n- Определи, какие показатели улучшились, а какие ухудшились.\n- Выдели наиболее существенные изменения.\n\nФормула абсолютного изменения:\n\nΔ = Текущая неделя − Предыдущая неделя\n\nФормула процентного изменения:\n\nΔ% = (Текущая − Предыдущая) / Предыдущая × 100%\n\nЕсли предыдущий показатель равен нулю, процентное изменение не вычисляй.\n\nЕсли поле changes уже содержит рассчитанные значения, используй их как основной источник числовых изменений.\n\nЕсли предыдущая неделя отсутствует, укажи, что сравнительная статистика пока недоступна.\n\n### 6. Общие выводы и рекомендации\n- Оцени активность проекта.\n- Определи наиболее распространённые проблемы.\n- Проанализируй соотношение новых и закрытых Issues.\n- Выдели позитивные и негативные тенденции.\n- Предложи 2–3 конкретные рекомендации разработчикам.\n\n## 7. AI-комментарий недели\n\nВ САМОМ КОНЦЕ отчёта обязательно добавь отдельный раздел:\n\n«🤖 AI-комментарий недели»\n\nЭто должна быть аналитическая интерпретация статистики, а не простое повторение таблиц.\n\nКомментарий должен содержать:\n\n**1. Общая оценка недели**\n\nНапиши 2–3 предложения о состоянии проекта и изменениях относительно предыдущей недели.\n\n**2. Основные изменения**\n\nВыдели 2–4 наиболее значимых изменения с конкретными числами и процентами.\n\n**3. Возможные проблемы**\n\nОбрати внимание на:\n- Увеличение количества багов.\n- Рост повторно открытых Issues.\n- Уменьшение количества закрытых задач.\n- Превышение количества новых Issues над закрытыми.\n\nУпоминай только тенденции, подтверждённые данными.\n\n**4. Положительные тенденции**\n\nОтметь улучшения, например:\n- Увеличение количества закрытых Issues.\n- Сокращение повторных открытий.\n- Уменьшение количества баг-репортов.\n\n**5. Рекомендации AI**\n\nДай 2–3 конкретные рекомендации на следующую неделю на основании обнаруженных изменений.\n\nКомментарий должен быть содержательным, профессиональным и написанным на естественном русском языке.\n\nЕсли статистика предыдущей недели отсутствует, сформируй AI-комментарий только по текущей неделе и явно укажи, что сравнение пока невозможно.\n\n## Важные правила\n\n1. Используй только предоставленные JSON.\n2. Не выдумывай Issues, авторов, события и причины изменений.\n3. Если один Issue встречается в разных категориях, не объединяй эти события в одно.\n4. Не считай рост opened автоматически плохим результатом.\n5. Не делай вывод об изменении общего количества открытых Issues только по разнице opened и closed.\n6. Не утверждай, что reopened означает некачественное исправление — это лишь возможный риск.\n7. Если отсутствуют данные, явно указывай это.\n8. Не делай сравнительных выводов, если предыдущая неделя неизвестна.\n9. Если GitHub API вернул неполные данные из-за пагинации, предупреди об этом.\n10. Если поле содержит массив событий, отделяй количество событий от числа уникальных Issue.\n11. Не добавляй несуществующие ссылки.\n12. В конце отчёта обязательно должен быть AI-комментарий недели.\n\n## Формат ответа\n\nВерни ТОЛЬКО готовый HTML-код для Gmail.\n\nНе используй Markdown и не добавляй блоки ```.\n\nСтруктура HTML-письма:\n\n1. Заголовок «Еженедельный отчёт GitHub Issues».\n2. Таблица общей статистики.\n3. Таблица распределения Issues по типам.\n4. Таблица топ-5 авторов.\n5. Раздел закрытых Issues.\n6. Раздел повторно открытых Issues.\n7. Таблица сравнения текущей и предыдущей недели с колонками:\n   - Показатель\n   - Прошлая неделя\n   - Текущая неделя\n   - Изменение (Δ)\n   - Изменение (%)\n8. Общие выводы и рекомендации.\n9. **🤖 AI-комментарий недели** — последний раздел письма.\n\nДля оформления используй:\n- Белый фон.\n- Синий цвет для заголовков.\n- Аккуратные таблицы с границами.\n- Зелёный цвет для положительных изменений.\n- Красный цвет для отрицательных изменений.\n- Серый цвет для нейтральной информации.\n- Inline CSS для совместимости с Gmail.\n\nНе окрашивай рост или снижение показателя как положительное либо отрицательное изменение, если его оценка неоднозначна.\n\nПисьмо должно выглядеть как профессиональный еженедельный аналитический отчёт.\n\nВерни только HTML-фрагмент без Markdown, без пояснений и без дополнительных комментариев за пределами HTML.",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1856,
+        -80
+      ],
+      "id": "1ac64c63-880f-40a6-bc1f-d3e0a218742d",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "anthropic/claude-sonnet-4.6",
+          "mode": "list",
+          "cachedResultName": "anthropic/claude-sonnet-4.6"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        1856,
+        128
+      ],
+      "id": "68176d16-2f22-4766-a5a7-87284b7e1841",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "olK7PaVmAnnlpgun",
+          "name": "OpenAI account 27"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "numberInputs": 3
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        704,
+        -96
+      ],
+      "id": "b0db889c-2158-4e7f-9cf9-e508dd9467a7",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "sendTo": "tchepasovegor@gmail.com",
+        "subject": "=Test",
+        "message": "={{ $json.output }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        2272,
+        -80
+      ],
+      "id": "4ac0b1fb-a69a-4d88-a28d-5fbd66b2f6fe",
+      "name": "Send a message",
+      "webhookId": "eacba71e-13ea-4693-a594-dd9486a4561e",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "0y5o12D5GgHcloNi",
+          "name": "Gmail account 7"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nconst data = items.flatMap(item => item.json.data ?? []);\n\nreturn [\n  {\n    json: {\n      data\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        880,
+        -80
+      ],
+      "id": "5e57d74a-0abf-453e-99a1-de8f7b260808",
+      "name": "Merge2"
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "ZXpLc6j2iPQmG1SI",
+          "mode": "list",
+          "cachedResultName": "WeeklyStatistic",
+          "cachedResultUrl": "/projects/FCTo4lB2XkyLA9VV/datatables/ZXpLc6j2iPQmG1SI"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "diff": "={{ JSON.stringify($json.data) }}",
+            "date": "={{ $('Current Date').item.json.currentDate.slice(0, 10) }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "date",
+              "displayName": "date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "diff",
+              "displayName": "diff",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1264,
+        -288
+      ],
+      "id": "7fa935a3-f4dd-4443-a79f-1b9b20eb0507",
+      "name": "Insert row"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dateTime",
+      "typeVersion": 2,
+      "position": [
+        -400,
+        48
+      ],
+      "id": "6df63030-53ca-4d93-8fb7-0f1208b95376",
+      "name": "Current Date"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "ZXpLc6j2iPQmG1SI",
+          "mode": "list",
+          "cachedResultName": "WeeklyStatistic",
+          "cachedResultUrl": "/projects/FCTo4lB2XkyLA9VV/datatables/ZXpLc6j2iPQmG1SI"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "date",
+              "keyValue": "={{ $('Previous Date').item.json.previousDate.slice(0, 10) }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1184,
+        48
+      ],
+      "id": "64c72cbb-6964-4a8a-b2dd-c785c2665d4b",
+      "name": "Get row(s)"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1408,
+        -80
+      ],
+      "id": "b9247194-1aae-4f7f-add9-f53ccd9d5bfa",
+      "name": "Merge1"
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst items = $input.all();\n\nconst data = items.flatMap(item => item.json.data ?? []);\n\nconst previousDiff = items.find(item => item.json.diff !== undefined)?.json.diff ?? null;\n\nreturn [\n  {\n    json: {\n      data: data.map(item => item.json ?? item),\n      previousDiff\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1584,
+        -80
+      ],
+      "id": "527df908-4511-4cb5-8ace-f2440e30ac09",
+      "name": "Merge3"
+    },
+    {
+      "parameters": {
+        "operation": "subtractFromDate",
+        "magnitude": "={{ $json.currentDate }}",
+        "duration": 7,
+        "outputFieldName": "previousDate",
+        "options": {
+          "includeInputFields": true
+        }
+      },
+      "type": "n8n-nodes-base.dateTime",
+      "typeVersion": 2,
+      "position": [
+        -208,
+        48
+      ],
+      "id": "fa592800-9f27-4f9e-9769-b9dbef2e2c7d",
+      "name": "Previous Date"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Current Date",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Opened Issues": {
+      "main": [
+        [
+          {
+            "node": "JSONProcessing 1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Closed Isssues": {
+      "main": [
+        [
+          {
+            "node": "JSONProcessing 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reopened Issues": {
+      "main": [
+        [
+          {
+            "node": "JSONProcessing 3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "JSONProcessing 1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "JSONProcessing 2": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "JSONProcessing 3": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge2": {
+      "main": [
+        [
+          {
+            "node": "Insert row",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get row(s)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Current Date": {
+      "main": [
+        [
+          {
+            "node": "Previous Date",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Merge3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Previous Date": {
+      "main": [
+        [
+          {
+            "node": "Opened Issues",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Closed Isssues",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Reopened Issues",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s)": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge3": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "9ce66b8e-566c-4d4d-9fb4-5f1dca00353d",
+  "meta": {
+    "instanceId": "68dbbb4e8fa686c3fd4e9982ade6836edb66976f207553e7ac22df961581c78c"
+  },
+  "nodeGroups": [],
+  "id": "T97KN4aeOPXjgdSP",
+  "tags": []
+}
