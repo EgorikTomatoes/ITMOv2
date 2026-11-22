@@ -1,0 +1,18 @@
+{
+  "name": "crypto-exchange-simulator",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": ["frontend", "backend"],
+  "scripts": {
+    "dev": "concurrently -n API,WEB -c cyan,green \"npm run dev -w backend\" \"npm run dev -w frontend\"",
+    "build": "npm run build -w frontend",
+    "test": "npm run test:unit && npm run test:client",
+    "test:unit": "vitest run tests",
+    "test:client": "npm run test -w frontend",
+    "reset": "node backend/data/reset.js"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "vitest": "^4.0.0"
+  }
+}
